@@ -1,0 +1,20 @@
+{
+  "name": "@campusly/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared ESLint, TypeScript, and Prettier configs (CODING_STANDARDS.md)",
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint.config.js",
+    "./tsconfig.base.json": "./tsconfig.base.json"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.13.0",
+    "typescript-eslint": "^8.11.0",
+    "eslint-config-prettier": "^9.1.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9.13.0",
+    "typescript": "^5.6.0"
+  }
+}

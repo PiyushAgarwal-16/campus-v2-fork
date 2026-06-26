@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Theme variables (UI_GUIDELINES.md §3–4). Only colors change between themes;
+ * layout/spacing/structure stay identical. Backgrounds are always solid — no
+ * gradients, glass, or neon. Values are HSL channels for Tailwind alpha support.
+ */
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 222 47% 11%; /* #111827 */
+    --muted: 220 14% 96%; /* #F3F4F6 */
+    --muted-foreground: 220 9% 46%; /* #6B7280 */
+    --surface: 210 20% 98%; /* #F9FAFB */
+    --border: 220 13% 91%; /* #E5E7EB */
+    --divider: 220 14% 96%; /* #F3F4F6 */
+    --disabled: 216 12% 84%; /* #D1D5DB */
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 210 20% 98%; /* #F9FAFB */
+    --muted: 215 28% 17%; /* #1F2937 */
+    --muted-foreground: 220 9% 65%; /* #9CA3AF */
+    --surface: 222 47% 11%; /* #111827 */
+    --border: 215 28% 17%; /* #1F2937 */
+    --divider: 215 28% 17%; /* #1F2937 */
+    --disabled: 215 19% 27%; /* #374151 */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}

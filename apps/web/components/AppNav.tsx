@@ -11,8 +11,11 @@ import { ThemeToggle } from './ThemeToggle';
  * simple, predictable). Primary surfaces grow here in later phases.
  */
 export function AppNav() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
+  const isStaff =
+    user !== null &&
+    (user.role === 'moderator' || user.role === 'admin' || user.role === 'super_admin');
 
   const signOut = () => {
     void logout().then(() => router.replace('/signin'));
@@ -42,6 +45,11 @@ export function AppNav() {
         <Link href="/settings" className="text-body text-muted-foreground hover:text-foreground">
           Settings
         </Link>
+        {isStaff && (
+          <Link href="/admin" className="text-body text-brand hover:text-brand/80">
+            Admin
+          </Link>
+        )}
       </nav>
       <div className="flex items-center gap-space-2">
         <ThemeToggle />

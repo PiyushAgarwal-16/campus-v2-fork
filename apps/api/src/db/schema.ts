@@ -1092,3 +1092,170 @@ export type CommunityRow = typeof communities.$inferSelect;
 export type CommunityMemberRow = typeof communityMembers.$inferSelect;
 export type CommunityPostRow = typeof communityPosts.$inferSelect;
 export type CommunityInviteRow = typeof communityInvites.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Moderation module (DATABASE_SCHEMA.md §15.2–15.7) — Phase 12
+// Graduated enforcement; every action is written transactionally with an
+// immutable audit_logs entry. reports table was created in Phase 07.
+// ---------------------------------------------------------------------------
+
+export const moderationActionEnum = pgEnum('moderation_action', [
+  'hide_content',
+  'remove_content',
+  'warn',
+  'restrict',
+  'ban',
+  'dismiss',
+]);
+export const banTypeEnum = pgEnum('ban_type', ['temporary', 'permanent']);
+export const appealStatusEnum = pgEnum('appeal_status', ['pending', 'upheld', 'overturned']);
+export const announcementAudienceEnum = pgEnum('announcement_audience', [
+  'all',
+  'campus',
+  'subscribers',
+  'admins',
+]);
+
+/** moderation_actions (§15.2) — a concrete action; append-only. */
+export const moderationActions = pgTable(
+  'moderation_actions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    moderatorId: uuid('moderator_id')
+      .notNull()
+      .references(() => users.id),
+    reportId: uuid('report_id').references(() => reports.id, { onDelete: 'set null' }),
+    targetType: reportTargetEnum('target_type').notNull(),
+    targetId: uuid('target_id').notNull(),
+    action: moderationActionEnum('action').notNull(),
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    reportIdx: index('idx_moderation_actions_report').on(t.reportId),
+    targetIdx: index('idx_moderation_actions_target').on(t.targetType, t.targetId),
+  }),
+);
+
+/** user_warnings (§15.3) — graduated-enforcement warnings. */
+export const userWarnings = pgTable(
+  'user_warnings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    actionId: uuid('action_id').references(() => moderationActions.id, { onDelete: 'set null' }),
+    message: text('message'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({ userIdx: index('idx_user_warnings_user').on(t.userId, t.createdAt) }),
+);
+
+/** user_bans (§15.4) — active/historical bans and temporary restrictions. */
+export const userBans = pgTable(
+  'user_bans',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    actionId: uuid('action_id').references(() => moderationActions.id, { onDelete: 'set null' }),
+    type: banTypeEnum('type').notNull(),
+    reason: text('reason'),
+    startsAt: timestamp('starts_at', { withTimezone: true }).notNull().defaultNow(),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    activeIdx: index('idx_user_bans_active')
+      .on(t.userId)
+      .where(sql`is_active`),
+    endsIdx: index('idx_user_bans_ends').on(t.endsAt),
+  }),
+);
+
+/** moderation_appeals (§15.5) — user appeals against actions. */
+export const moderationAppeals = pgTable(
+  'moderation_appeals',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    actionId: uuid('action_id')
+      .notNull()
+      .references(() => moderationActions.id, { onDelete: 'cascade' }),
+    message: text('message').notNull(),
+    status: appealStatusEnum('status').notNull().default('pending'),
+    reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (t) => ({ statusIdx: index('idx_moderation_appeals_status').on(t.status, t.createdAt) }),
+);
+
+/** audit_logs (§15.7) — immutable, append-only accountability ledger. */
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    targetType: text('target_type'),
+    targetId: uuid('target_id'),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    actorIdx: index('idx_audit_logs_actor').on(t.actorId, t.createdAt),
+    targetIdx: index('idx_audit_logs_target').on(t.targetType, t.targetId),
+    actionIdx: index('idx_audit_logs_action').on(t.action),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// System module (DATABASE_SCHEMA.md §19.2, §19.4) — Phase 12
+// ---------------------------------------------------------------------------
+
+/** feature_flags (§19.2) — platform-wide toggles for safe rollout / kill-switch. */
+export const featureFlags = pgTable(
+  'feature_flags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    key: text('key').notNull(),
+    isEnabled: boolean('is_enabled').notNull().default(false),
+    rollout: jsonb('rollout'),
+    description: text('description'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({ keyUnique: unique('uq_feature_flags_key').on(t.key) }),
+);
+
+/** announcements (§19.4) — system/admin announcements, global or per-campus. */
+export const announcements = pgTable(
+  'announcements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    universityId: uuid('university_id').references(() => universities.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    audience: announcementAudienceEnum('audience').notNull().default('all'),
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({ campusIdx: index('idx_announcements_campus').on(t.universityId, t.startsAt) }),
+);
+
+export type ModerationActionRow = typeof moderationActions.$inferSelect;
+export type UserBanRow = typeof userBans.$inferSelect;
+export type UserWarningRow = typeof userWarnings.$inferSelect;
+export type ModerationAppealRow = typeof moderationAppeals.$inferSelect;
+export type AuditLogRow = typeof auditLogs.$inferSelect;
+export type FeatureFlagRow = typeof featureFlags.$inferSelect;
+export type AnnouncementRow = typeof announcements.$inferSelect;

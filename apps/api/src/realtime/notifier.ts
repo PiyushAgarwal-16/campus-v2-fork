@@ -22,6 +22,11 @@ class Notifier {
   emitToRoom(room: string, event: string, payload: unknown): void {
     this.io?.to(room).emit(event, payload);
   }
+
+  /** Emit an event to every connected client (global announcements, kill-switch). */
+  broadcast(event: string, payload: unknown): void {
+    this.io?.emit(event, payload);
+  }
 }
 
 export const notifier = new Notifier();

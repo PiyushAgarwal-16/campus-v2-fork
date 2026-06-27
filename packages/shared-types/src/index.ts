@@ -14,3 +14,4 @@ export * from './friends';
 export * from './media';
 export * from './wall';
 export * from './communities';
+export * from './admin';

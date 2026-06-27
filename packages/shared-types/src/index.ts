@@ -10,3 +10,4 @@ export * from './auth';
 export * from './profile';
 export * from './matching';
 export * from './messaging';
+export * from './friends';

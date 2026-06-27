@@ -172,6 +172,28 @@ export const matchingRepository = {
     return rows.length > 0;
   },
 
+  /**
+   * Marks the most recent match between two users as converted to a friendship
+   * (MATCHING_ENGINE.md §12 — the friend-conversion metric). Best-effort.
+   */
+  async markBecameFriends(a: string, b: string): Promise<void> {
+    const [low, high] = [a, b].sort();
+    if (!low || !high) return;
+    const rows = await db
+      .select({ id: matchHistory.id })
+      .from(matchHistory)
+      .where(and(eq(matchHistory.userA, low), eq(matchHistory.userB, high)))
+      .orderBy(sql`${matchHistory.createdAt} desc`)
+      .limit(1);
+    const latest = rows[0];
+    if (latest) {
+      await db
+        .update(matchHistory)
+        .set({ becameFriends: true })
+        .where(eq(matchHistory.id, latest.id));
+    }
+  },
+
   /** A user's recent match history (GET /matching/history). */
   async historyForUser(userId: string, limit = 20) {
     return db

@@ -11,6 +11,7 @@ import { authRouter } from './http/auth.routes.js';
 import { userRouter } from './http/user.routes.js';
 import { matchingRouter } from './http/matching.routes.js';
 import { messagingRouter } from './http/messaging.routes.js';
+import { friendRouter } from './http/friend.routes.js';
 
 /** API version prefix (API_SPEC.md §2.1). */
 export const API_PREFIX = '/api/v1';
@@ -38,6 +39,7 @@ export function createApp(): Express {
   app.use(API_PREFIX, userRouter);
   app.use(API_PREFIX, matchingRouter);
   app.use(API_PREFIX, messagingRouter);
+  app.use(API_PREFIX, friendRouter);
 
   // Feature routers (wall, communities, ...) mount under API_PREFIX in later phases.
 

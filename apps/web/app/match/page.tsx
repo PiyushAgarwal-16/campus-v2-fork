@@ -5,6 +5,7 @@ import { REPORT_REASONS, type ReportReason } from '@campusly/shared-types';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useMatching } from '../../hooks/useMatching';
 import { apiFetch } from '../../lib/apiClient';
+import { friendsApi } from '../../lib/friends';
 import { AppNav } from '../../components/AppNav';
 import { Chat } from '../../components/Chat';
 import { Card, CardTitle, CardDescription } from '../../components/ui/Card';
@@ -18,8 +19,17 @@ export default function MatchPage() {
   const { user, isLoading } = useRequireAuth();
   const { state, sessionId, endedReason, findMatch, cancel, leaveSession } = useMatching();
   const [reporting, setReporting] = useState(false);
+  const [friendRequest, setFriendRequest] = useState<'idle' | 'sent' | 'accepted'>('idle');
 
   if (isLoading || !user) return null;
+
+  const addFriend = () => {
+    if (!sessionId) return;
+    void friendsApi
+      .sendRequest({ origin: 'session', sessionId })
+      .then((res) => setFriendRequest(res.status === 'accepted' ? 'accepted' : 'sent'))
+      .catch(() => setFriendRequest('idle'));
+  };
 
   const report = (reason: ReportReason) => {
     if (!sessionId) return;
@@ -83,6 +93,18 @@ export default function MatchPage() {
                 <span className="text-body text-foreground">Connected — anonymous</span>
               </div>
               <div className="flex gap-space-2">
+                <Button
+                  size="sm"
+                  onClick={addFriend}
+                  disabled={friendRequest !== 'idle'}
+                  aria-label="Add friend"
+                >
+                  {friendRequest === 'accepted'
+                    ? 'Friends'
+                    : friendRequest === 'sent'
+                      ? 'Request sent'
+                      : 'Add friend'}
+                </Button>
                 <Button variant="secondary" size="sm" onClick={leaveSession}>
                   Leave
                 </Button>

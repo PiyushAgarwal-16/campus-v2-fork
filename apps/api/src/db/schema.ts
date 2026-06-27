@@ -23,6 +23,7 @@ import {
   jsonb,
   timestamp,
   unique,
+  uniqueIndex,
   index,
   primaryKey,
   check,
@@ -463,7 +464,7 @@ export const messages = pgTable(
     id: uuid('id').notNull().defaultRandom(),
     contextType: messageContextEnum('context_type').notNull(),
     sessionId: uuid('session_id').references(() => anonSessions.id, { onDelete: 'cascade' }),
-    friendshipId: uuid('friendship_id'), // FK added in Phase 05 (friendships)
+    friendshipId: uuid('friendship_id').references(() => friendships.id, { onDelete: 'cascade' }),
     senderId: uuid('sender_id')
       .notNull()
       .references(() => users.id),
@@ -502,7 +503,7 @@ export const messageReceipts = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     contextType: messageContextEnum('context_type').notNull(),
     sessionId: uuid('session_id').references(() => anonSessions.id, { onDelete: 'cascade' }),
-    friendshipId: uuid('friendship_id'),
+    friendshipId: uuid('friendship_id').references(() => friendships.id, { onDelete: 'cascade' }),
     lastReadMessageId: uuid('last_read_message_id'),
     lastReadAt: timestamp('last_read_at', { withTimezone: true }),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -518,3 +519,98 @@ export const messageReceipts = pgTable(
 );
 
 export type MessageRow = typeof messages.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Friend System module (DATABASE_SCHEMA.md §9) — Phase 05
+// A friendship is symmetric and stored once (order-normalized user_low <
+// user_high) to avoid duplicate rows. Blocks are directional and enforced
+// across matching, requests, and messaging.
+// ---------------------------------------------------------------------------
+
+export const friendRequestOriginEnum = pgEnum('friend_request_origin', [
+  'session',
+  'profile',
+  'community',
+]);
+
+export const friendRequestStatusEnum = pgEnum('friend_request_status', [
+  'pending',
+  'accepted',
+  'rejected',
+  'cancelled',
+]);
+
+/** friend_requests (§9.1) — a pending/decided request from one user to another. */
+export const friendRequests = pgTable(
+  'friend_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    receiverId: uuid('receiver_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    origin: friendRequestOriginEnum('origin'),
+    status: friendRequestStatusEnum('status').notNull().default('pending'),
+    respondedAt: timestamp('responded_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // At most one pending request per ordered pair (no duplicate pending).
+    pendingUnique: uniqueIndex('uq_friend_requests_pending')
+      .on(t.senderId, t.receiverId)
+      .where(sql`status = 'pending'`),
+    receiverIdx: index('idx_friend_requests_receiver_status').on(t.receiverId, t.status),
+    senderIdx: index('idx_friend_requests_sender_status').on(t.senderId, t.status),
+    notSelf: check('friend_requests_not_self', sql`sender_id <> receiver_id`),
+  }),
+);
+
+/** friendships (§9.2) — an established, symmetric friendship; the friend-chat context. */
+export const friendships = pgTable(
+  'friendships',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userLow: uuid('user_low')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    userHigh: uuid('user_high')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    isCloseFriendLow: boolean('is_close_friend_low').notNull().default(false),
+    isCloseFriendHigh: boolean('is_close_friend_high').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => ({
+    pairUnique: unique('uq_friendships_pair').on(t.userLow, t.userHigh),
+    lowIdx: index('idx_friendships_user_low').on(t.userLow),
+    highIdx: index('idx_friendships_user_high').on(t.userHigh),
+    ordered: check('friendships_user_order', sql`user_low < user_high`),
+  }),
+);
+
+/** blocked_users (§9.3) — directional block list; the strongest user control. */
+export const blockedUsers = pgTable(
+  'blocked_users',
+  {
+    blockerId: uuid('blocker_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    blockedId: uuid('blocked_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.blockerId, t.blockedId] }),
+    blockedIdx: index('idx_blocked_users_blocked').on(t.blockedId),
+    notSelf: check('blocked_users_not_self', sql`blocker_id <> blocked_id`),
+  }),
+);
+
+export type FriendRequestRow = typeof friendRequests.$inferSelect;
+export type FriendshipRow = typeof friendships.$inferSelect;
+export type BlockedUserRow = typeof blockedUsers.$inferSelect;

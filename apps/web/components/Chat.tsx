@@ -40,7 +40,9 @@ export function Chat({
       <div className="flex-1 overflow-y-auto px-space-1 py-space-2">
         {messages.length === 0 ? (
           <p className="py-space-8 text-center text-caption text-muted-foreground">
-            Say hello — you&apos;re chatting anonymously.
+            {contextType === 'friendship'
+              ? 'Say hello to your new friend.'
+              : "Say hello — you're chatting anonymously."}
           </p>
         ) : (
           <ul className="flex flex-col gap-space-2">

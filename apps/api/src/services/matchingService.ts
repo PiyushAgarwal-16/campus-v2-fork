@@ -2,6 +2,7 @@ import type { Server as SocketIOServer } from 'socket.io';
 import { MATCH_SERVER_EVENTS } from '@campusly/shared-types';
 import { logger } from '../config/logger.js';
 import { matchingRepository } from '../repositories/matchingRepository.js';
+import { friendRepository } from '../repositories/friendRepository.js';
 
 /**
  * Anonymous matching engine (MATCHING_ENGINE.md, ARCHITECTURE.md §5).
@@ -62,8 +63,9 @@ class MatchingService {
       return;
     }
 
-    // Find the oldest compatible waiting partner (same campus, not self).
-    const partnerId = this.pickPartner(userId, universityId);
+    // Find the oldest compatible waiting partner (same campus, not self, not
+    // blocked in either direction — block enforcement, FRIEND_SYSTEM.md §4).
+    const partnerId = await this.pickPartner(userId, universityId);
 
     if (!partnerId) {
       const now = Date.now();
@@ -98,14 +100,22 @@ class MatchingService {
     }
   }
 
-  private pickPartner(userId: string, universityId: string): string | null {
-    let best: { id: string; enqueuedAt: number } | null = null;
+  private async pickPartner(userId: string, universityId: string): Promise<string | null> {
+    // Oldest-first candidates on the same campus (broadly FIFO fairness).
+    const candidates: { id: string; enqueuedAt: number }[] = [];
     for (const [id, entry] of this.waiting) {
       if (id === userId) continue;
       if (entry.universityId !== universityId) continue;
-      if (!best || entry.enqueuedAt < best.enqueuedAt) best = { id, enqueuedAt: entry.enqueuedAt };
+      candidates.push({ id, enqueuedAt: entry.enqueuedAt });
     }
-    return best?.id ?? null;
+    candidates.sort((a, b) => a.enqueuedAt - b.enqueuedAt);
+    for (const candidate of candidates) {
+      // Skip pairs where either user has blocked the other.
+      if (!(await friendRepository.isBlockedEitherWay(userId, candidate.id))) {
+        return candidate.id;
+      }
+    }
+    return null;
     // NOTE: recent-match de-prioritization (matchingRepository.wereRecentlyMatched)
     // is a documented refinement (MATCHING_ENGINE.md §4) deferred to keep pairing
     // synchronous and race-free at MVP scale.

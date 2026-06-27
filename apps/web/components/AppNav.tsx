@@ -24,6 +24,12 @@ export function AppNav() {
         <Link href="/" className="text-h3 font-semibold text-brand">
           Campusly
         </Link>
+        <Link href="/match" className="text-body text-muted-foreground hover:text-foreground">
+          Match
+        </Link>
+        <Link href="/friends" className="text-body text-muted-foreground hover:text-foreground">
+          Friends
+        </Link>
         <Link href="/profile" className="text-body text-muted-foreground hover:text-foreground">
           Profile
         </Link>

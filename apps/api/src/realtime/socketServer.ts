@@ -11,6 +11,7 @@ import { logger } from '../config/logger.js';
 import { tokenService } from '../services/tokenService.js';
 import { matchingService } from '../services/matchingService.js';
 import { messagingService } from '../services/messagingService.js';
+import { notifier } from './notifier.js';
 
 /**
  * Socket.IO server lifecycle (ARCHITECTURE.md §2.3, SOCKET_EVENTS.md §1–2, §14).
@@ -144,5 +145,6 @@ export function createSocketServer(httpServer: HttpServer): SocketIOServer {
   });
 
   matchingService.setServer(io);
+  notifier.setServer(io);
   return io;
 }

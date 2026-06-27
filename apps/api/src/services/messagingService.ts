@@ -3,11 +3,12 @@ import { ForbiddenError } from '../domain/errors.js';
 import type { MessageRow } from '../db/schema.js';
 import { messagingRepository } from '../repositories/messagingRepository.js';
 import { matchingRepository } from '../repositories/matchingRepository.js';
+import { friendRepository } from '../repositories/friendRepository.js';
 
 /**
  * Messaging business logic (ARCHITECTURE.md §6). Transport-agnostic: the same
- * service serves Socket.IO and REST. Phase 04 wires the anon_session context;
- * the friendship context activates in Phase 05.
+ * service serves Socket.IO and REST. Phase 04 wired the anon_session context;
+ * Phase 05 activates the friendship context (block-aware friend chat).
  */
 
 function toChatMessage(row: MessageRow): ChatMessage {
@@ -32,8 +33,14 @@ export const messagingService = {
     if (contextType === 'anon_session') {
       return matchingRepository.isParticipant(contextId, userId);
     }
-    // friendship context — implemented in Phase 05 (friend chat).
-    return false;
+    // friendship context (Phase 05): must be an active friendship the user is
+    // part of, with neither party blocking the other (block-aware).
+    const friendship = await friendRepository.getFriendshipById(contextId);
+    if (!friendship || friendship.deletedAt) return false;
+    if (friendship.userLow !== userId && friendship.userHigh !== userId) return false;
+    const otherId = friendship.userLow === userId ? friendship.userHigh : friendship.userLow;
+    if (await friendRepository.isBlockedEitherWay(userId, otherId)) return false;
+    return true;
   },
 
   /** The user ids that should receive events for this conversation. */
@@ -41,7 +48,13 @@ export const messagingService = {
     if (contextType === 'anon_session') {
       return matchingRepository.getParticipants(contextId);
     }
-    return [];
+    const friendship = await friendRepository.getFriendshipById(contextId);
+    if (!friendship || friendship.deletedAt) return [];
+    // Suppress delivery if a block is in effect (defense in depth).
+    if (await friendRepository.isBlockedEitherWay(friendship.userLow, friendship.userHigh)) {
+      return [];
+    }
+    return [friendship.userLow, friendship.userHigh];
   },
 
   async assertAuthorized(

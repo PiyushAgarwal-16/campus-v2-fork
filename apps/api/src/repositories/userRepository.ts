@@ -1,4 +1,4 @@
-import { and, eq, ilike, isNull } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNull } from 'drizzle-orm';
 import type { AccountStatus } from '@campusly/shared-types';
 import { db } from '../db/client.js';
 import {
@@ -105,5 +105,57 @@ export const userRepository = {
       .update(users)
       .set({ accountStatus: 'deactivated', deletedAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, id));
+  },
+
+  /**
+   * Minimal public identity for a set of users (FRIEND_SYSTEM.md §4 — revealed
+   * only on consensual friendship). Joins the profile for the avatar reference.
+   */
+  async getPublicSummaries(
+    ids: string[],
+  ): Promise<
+    Map<
+      string,
+      {
+        id: string;
+        name: string;
+        universityId: string;
+        year: number | null;
+        avatarMediaId: string | null;
+      }
+    >
+  > {
+    const map = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        universityId: string;
+        year: number | null;
+        avatarMediaId: string | null;
+      }
+    >();
+    if (ids.length === 0) return map;
+    const rows = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        universityId: users.universityId,
+        year: users.year,
+        avatarMediaId: profiles.avatarMediaId,
+      })
+      .from(users)
+      .leftJoin(profiles, eq(profiles.userId, users.id))
+      .where(inArray(users.id, ids));
+    for (const r of rows) {
+      map.set(r.id, {
+        id: r.id,
+        name: r.name,
+        universityId: r.universityId,
+        year: r.year,
+        avatarMediaId: r.avatarMediaId ?? null,
+      });
+    }
+    return map;
   },
 };

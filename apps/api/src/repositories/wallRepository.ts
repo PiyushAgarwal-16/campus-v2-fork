@@ -38,12 +38,18 @@ export const wallRepository = {
   },
 
   async ensureGlobalCategories(defaults: { name: string; slug: string }[]): Promise<void> {
-    // Idempotent seed of global categories (university_id null).
+    // Idempotent seed of global categories. NOTE: the unique index is on
+    // (university_id, slug), and Postgres treats NULL university_id as distinct,
+    // so onConflictDoNothing would NOT dedupe globals — we check existence first.
     for (const c of defaults) {
-      await db
-        .insert(wallCategories)
-        .values({ universityId: null, name: c.name, slug: c.slug })
-        .onConflictDoNothing();
+      const existing = await db
+        .select({ id: wallCategories.id })
+        .from(wallCategories)
+        .where(and(isNull(wallCategories.universityId), eq(wallCategories.slug, c.slug)))
+        .limit(1);
+      if (existing.length === 0) {
+        await db.insert(wallCategories).values({ universityId: null, name: c.name, slug: c.slug });
+      }
     }
   },
 

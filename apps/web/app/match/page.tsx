@@ -1,25 +1,60 @@
 'use client';
 
-import { useState } from 'react';
-import { REPORT_REASONS, type ReportReason } from '@campusly/shared-types';
+import { useEffect, useState } from 'react';
+import {
+  REPORT_REASONS,
+  FRIEND_SERVER_EVENTS,
+  type ReportReason,
+  type FriendRequestReceivedPayload,
+} from '@campusly/shared-types';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useMatching } from '../../hooks/useMatching';
 import { apiFetch } from '../../lib/apiClient';
 import { friendsApi } from '../../lib/friends';
+import { getSocket } from '../../lib/socket';
 import { AppNav } from '../../components/AppNav';
 import { Chat } from '../../components/Chat';
 import { Card, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
+type FriendState = 'idle' | 'sent' | 'incoming' | 'accepted';
+
 /**
- * Anonymous matching (MATCHING_ENGINE.md, implementation 03). Phase 03 delivers
- * pairing + session lifecycle; the in-session conversation arrives in Phase 04.
+ * Anonymous matching (MATCHING_ENGINE.md, implementation 03). Pairing + session
+ * lifecycle, in-session chat, and the friend-request bridge (FRIEND_SYSTEM.md §8):
+ * either party can offer friendship; the other can accept right here.
  */
 export default function MatchPage() {
   const { user, isLoading } = useRequireAuth();
   const { state, sessionId, endedReason, findMatch, cancel, leaveSession } = useMatching();
   const [reporting, setReporting] = useState(false);
-  const [friendRequest, setFriendRequest] = useState<'idle' | 'sent' | 'accepted'>('idle');
+  const [friendState, setFriendState] = useState<FriendState>('idle');
+  const [incomingRequestId, setIncomingRequestId] = useState<string | null>(null);
+
+  // Reset friend UI whenever the session changes.
+  useEffect(() => {
+    setFriendState('idle');
+    setIncomingRequestId(null);
+  }, [sessionId]);
+
+  // Listen for the partner's friend request / acceptance during the session.
+  useEffect(() => {
+    if (!sessionId) return;
+    const socket = getSocket();
+    const onReceived = (p: FriendRequestReceivedPayload) => {
+      if (p.origin === 'session') {
+        setIncomingRequestId(p.requestId);
+        setFriendState((s) => (s === 'sent' || s === 'accepted' ? s : 'incoming'));
+      }
+    };
+    const onAccepted = () => setFriendState('accepted');
+    socket.on(FRIEND_SERVER_EVENTS.FRIEND_REQUEST_RECEIVED, onReceived);
+    socket.on(FRIEND_SERVER_EVENTS.FRIEND_REQUEST_ACCEPTED, onAccepted);
+    return () => {
+      socket.off(FRIEND_SERVER_EVENTS.FRIEND_REQUEST_RECEIVED, onReceived);
+      socket.off(FRIEND_SERVER_EVENTS.FRIEND_REQUEST_ACCEPTED, onAccepted);
+    };
+  }, [sessionId]);
 
   if (isLoading || !user) return null;
 
@@ -27,8 +62,16 @@ export default function MatchPage() {
     if (!sessionId) return;
     void friendsApi
       .sendRequest({ origin: 'session', sessionId })
-      .then((res) => setFriendRequest(res.status === 'accepted' ? 'accepted' : 'sent'))
-      .catch(() => setFriendRequest('idle'));
+      .then((res) => setFriendState(res.status === 'accepted' ? 'accepted' : 'sent'))
+      .catch(() => setFriendState('idle'));
+  };
+
+  const acceptFriend = () => {
+    if (!incomingRequestId) return;
+    void friendsApi
+      .accept(incomingRequestId)
+      .then(() => setFriendState('accepted'))
+      .catch(() => setFriendState('incoming'));
   };
 
   const report = (reason: ReportReason) => {
@@ -93,18 +136,24 @@ export default function MatchPage() {
                 <span className="text-body text-foreground">Connected — anonymous</span>
               </div>
               <div className="flex gap-space-2">
-                <Button
-                  size="sm"
-                  onClick={addFriend}
-                  disabled={friendRequest !== 'idle'}
-                  aria-label="Add friend"
-                >
-                  {friendRequest === 'accepted'
-                    ? 'Friends'
-                    : friendRequest === 'sent'
-                      ? 'Request sent'
-                      : 'Add friend'}
-                </Button>
+                {friendState === 'incoming' ? (
+                  <Button size="sm" onClick={acceptFriend} aria-label="Accept friend request">
+                    Accept request
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={addFriend}
+                    disabled={friendState !== 'idle'}
+                    aria-label="Add friend"
+                  >
+                    {friendState === 'accepted'
+                      ? 'Friends'
+                      : friendState === 'sent'
+                        ? 'Request sent'
+                        : 'Add friend'}
+                  </Button>
+                )}
                 <Button variant="secondary" size="sm" onClick={leaveSession}>
                   Leave
                 </Button>

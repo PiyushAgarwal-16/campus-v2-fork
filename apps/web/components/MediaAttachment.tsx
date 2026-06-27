@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { ChatAttachment } from '@campusly/shared-types';
 import { mediaApi } from '../lib/media';
+import { cn } from '../lib/utils';
 
 /**
  * Renders a chat media attachment (MEDIA_SYSTEM.md §5–8) by fetching a
@@ -12,9 +13,12 @@ import { mediaApi } from '../lib/media';
 export function MediaAttachment({
   attachment,
   expired,
+  imgClassName,
 }: {
   attachment: ChatAttachment;
   expired?: boolean;
+  /** Overrides image sizing (e.g. for avatars that fill a fixed circle). */
+  imgClassName?: string;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -64,7 +68,7 @@ export function MediaAttachment({
     <img
       src={url}
       alt="Shared media"
-      className="max-h-64 max-w-full rounded-card object-cover"
+      className={cn('max-h-64 max-w-full rounded-card object-cover', imgClassName)}
       loading="lazy"
     />
   );

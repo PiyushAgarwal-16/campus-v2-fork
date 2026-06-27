@@ -1,10 +1,16 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
-import { MATCH_CLIENT_EVENTS } from '@campusly/shared-types';
+import {
+  MATCH_CLIENT_EVENTS,
+  CHAT_CLIENT_EVENTS,
+  CHAT_SERVER_EVENTS,
+  SendMessageSchema,
+} from '@campusly/shared-types';
 import { config } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { tokenService } from '../services/tokenService.js';
 import { matchingService } from '../services/matchingService.js';
+import { messagingService } from '../services/messagingService.js';
 
 /**
  * Socket.IO server lifecycle (ARCHITECTURE.md §2.3, SOCKET_EVENTS.md §1–2, §14).
@@ -68,6 +74,62 @@ export function createSocketServer(httpServer: HttpServer): SocketIOServer {
     socket.on(MATCH_CLIENT_EVENTS.HEARTBEAT, () => {
       matchingService.heartbeat(userId);
     });
+
+    // --- Chat events (SOCKET_EVENTS.md §5) ---
+    socket.on(CHAT_CLIENT_EVENTS.SEND_MESSAGE, (raw: unknown) => {
+      const parsed = SendMessageSchema.safeParse(raw);
+      if (!parsed.success) return;
+      void messagingService
+        .sendMessage(userId, parsed.data)
+        .then(({ message, recipients }) => {
+          for (const uid of recipients) {
+            io.to(`user:${uid}`).emit(CHAT_SERVER_EVENTS.RECEIVE_MESSAGE, message);
+          }
+        })
+        .catch((err) => logger.error({ err, userId }, 'send_message failed'));
+    });
+
+    socket.on(
+      CHAT_CLIENT_EVENTS.MESSAGE_READ,
+      (raw: { contextType?: string; contextId?: string; lastReadMessageId?: string }) => {
+        const { contextType, contextId, lastReadMessageId } = raw ?? {};
+        if (
+          (contextType !== 'anon_session' && contextType !== 'friendship') ||
+          !contextId ||
+          !lastReadMessageId
+        ) {
+          return;
+        }
+        void messagingService
+          .markRead(userId, contextType, contextId, lastReadMessageId)
+          .then((recipients) => {
+            for (const uid of recipients) {
+              if (uid === userId) continue;
+              io.to(`user:${uid}`).emit(CHAT_SERVER_EVENTS.MESSAGE_READ, {
+                contextType,
+                contextId,
+                userId,
+                lastReadMessageId,
+              });
+            }
+          })
+          .catch((err) => logger.error({ err, userId }, 'message_read failed'));
+      },
+    );
+
+    // Typing indicators are ephemeral — never persisted (SOCKET_EVENTS.md §5).
+    const relayTyping = (event: string) => (raw: { contextType?: string; contextId?: string }) => {
+      const { contextType, contextId } = raw ?? {};
+      if ((contextType !== 'anon_session' && contextType !== 'friendship') || !contextId) return;
+      void messagingService.recipients(contextType, contextId).then((recipients) => {
+        for (const uid of recipients) {
+          if (uid === userId) continue;
+          io.to(`user:${uid}`).emit(event, { contextType, contextId, userId });
+        }
+      });
+    };
+    socket.on(CHAT_CLIENT_EVENTS.TYPING_START, relayTyping(CHAT_SERVER_EVENTS.TYPING_START));
+    socket.on(CHAT_CLIENT_EVENTS.TYPING_STOP, relayTyping(CHAT_SERVER_EVENTS.TYPING_STOP));
 
     socket.on('disconnect', (reason) => {
       logger.info({ socketId: socket.id, userId, reason }, 'Socket disconnected');

@@ -25,7 +25,9 @@ import {
   unique,
   index,
   primaryKey,
+  check,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
 // Enums (resolved canonical sets — REVIEW_REPORT C-1, C-2)
@@ -436,3 +438,83 @@ export const matchHistory = pgTable(
 
 export type AnonSessionRow = typeof anonSessions.$inferSelect;
 export type MatchQueueRow = typeof matchQueue.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Messaging module (DATABASE_SCHEMA.md §8) — Phase 04
+// Unified model: a message belongs to exactly one context (anon_session now;
+// friendship activates in Phase 05). Media attachments arrive in Phase 06.
+// ---------------------------------------------------------------------------
+
+export const messageContextEnum = pgEnum('message_context_type', ['anon_session', 'friendship']);
+
+export const messageTypeEnum = pgEnum('message_type', ['text', 'voice', 'image', 'system']);
+
+export const messageDeliveryEnum = pgEnum('message_delivery_status', ['sent', 'delivered', 'read']);
+
+/**
+ * messages (§8.1). Partition-ready: PK is composite (created_at, id) so the
+ * table can be range-partitioned by time later (REVIEW_REPORT H-2). One context
+ * FK is set per row, matching context_type (enforced by a check constraint).
+ * `friendship_id` has no FK until the friendships table exists (Phase 05).
+ */
+export const messages = pgTable(
+  'messages',
+  {
+    id: uuid('id').notNull().defaultRandom(),
+    contextType: messageContextEnum('context_type').notNull(),
+    sessionId: uuid('session_id').references(() => anonSessions.id, { onDelete: 'cascade' }),
+    friendshipId: uuid('friendship_id'), // FK added in Phase 05 (friendships)
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id),
+    type: messageTypeEnum('type').notNull().default('text'),
+    body: text('body'),
+    hasAttachment: boolean('has_attachment').notNull().default(false),
+    deliveryStatus: messageDeliveryEnum('delivery_status').notNull().default('sent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    editedAt: timestamp('edited_at', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.createdAt, t.id] }),
+    sessionIdx: index('idx_messages_session_created').on(t.sessionId, t.createdAt),
+    friendshipIdx: index('idx_messages_friendship_created').on(t.friendshipId, t.createdAt),
+    contextCheck: check(
+      'messages_one_context',
+      sql`(context_type = 'anon_session' and session_id is not null and friendship_id is null)
+          or (context_type = 'friendship' and friendship_id is not null and session_id is null)`,
+    ),
+  }),
+);
+
+/**
+ * message_receipts (§8.4) — authoritative read state as a high-water mark per
+ * user per conversation (REVIEW_REPORT M-2: receipts are the source of truth for
+ * "read"; messages.delivery_status is a coarse per-message indicator).
+ * `last_read_message_id` is a soft pointer (no FK — messages PK is composite).
+ */
+export const messageReceipts = pgTable(
+  'message_receipts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    contextType: messageContextEnum('context_type').notNull(),
+    sessionId: uuid('session_id').references(() => anonSessions.id, { onDelete: 'cascade' }),
+    friendshipId: uuid('friendship_id'),
+    lastReadMessageId: uuid('last_read_message_id'),
+    lastReadAt: timestamp('last_read_at', { withTimezone: true }),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    perConversationUnique: unique('uq_message_receipts_conversation').on(
+      t.userId,
+      t.contextType,
+      t.sessionId,
+      t.friendshipId,
+    ),
+  }),
+);
+
+export type MessageRow = typeof messages.$inferSelect;

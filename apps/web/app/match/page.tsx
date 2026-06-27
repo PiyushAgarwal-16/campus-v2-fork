@@ -6,6 +6,7 @@ import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useMatching } from '../../hooks/useMatching';
 import { apiFetch } from '../../lib/apiClient';
 import { AppNav } from '../../components/AppNav';
+import { Chat } from '../../components/Chat';
 import { Card, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
@@ -74,36 +75,37 @@ export default function MatchPage() {
           </>
         )}
 
-        {state === 'in_session' && (
-          <>
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-success" />
-            <div className="flex flex-col gap-space-1">
-              <CardTitle>You&apos;re connected</CardTitle>
-              <CardDescription>
-                You&apos;re chatting anonymously. Messaging arrives in the next phase — for now you
-                can leave or report.
-              </CardDescription>
-            </div>
-            <div className="flex flex-col items-center gap-space-3">
-              <div className="flex gap-space-3">
-                <Button variant="secondary" onClick={leaveSession}>
-                  Leave chat
+        {state === 'in_session' && sessionId && (
+          <div className="flex w-full flex-col gap-space-4">
+            <div className="flex items-center justify-between gap-space-3 border-b border-border pb-space-3">
+              <div className="flex items-center gap-space-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-success" />
+                <span className="text-body text-foreground">Connected — anonymous</span>
+              </div>
+              <div className="flex gap-space-2">
+                <Button variant="secondary" size="sm" onClick={leaveSession}>
+                  Leave
                 </Button>
-                <Button variant="ghost" onClick={() => setReporting((v) => !v)}>
+                <Button variant="ghost" size="sm" onClick={() => setReporting((v) => !v)}>
                   Report
                 </Button>
               </div>
-              {reporting && (
-                <div className="flex flex-wrap justify-center gap-space-2">
-                  {REPORT_REASONS.map((r) => (
-                    <Button key={r} variant="danger" size="sm" onClick={() => report(r)}>
-                      {r}
-                    </Button>
-                  ))}
-                </div>
-              )}
             </div>
-          </>
+
+            {reporting && (
+              <div className="flex flex-wrap justify-center gap-space-2">
+                {REPORT_REASONS.map((r) => (
+                  <Button key={r} variant="danger" size="sm" onClick={() => report(r)}>
+                    {r}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            <div className="h-96">
+              <Chat contextType="anon_session" contextId={sessionId} selfId={user.id} />
+            </div>
+          </div>
         )}
       </Card>
     </main>

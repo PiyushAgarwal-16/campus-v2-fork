@@ -9,3 +9,4 @@ export * from './pagination';
 export * from './auth';
 export * from './profile';
 export * from './matching';
+export * from './messaging';

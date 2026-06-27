@@ -10,6 +10,7 @@ import { healthRouter } from './http/health.routes.js';
 import { authRouter } from './http/auth.routes.js';
 import { userRouter } from './http/user.routes.js';
 import { matchingRouter } from './http/matching.routes.js';
+import { messagingRouter } from './http/messaging.routes.js';
 
 /** API version prefix (API_SPEC.md §2.1). */
 export const API_PREFIX = '/api/v1';
@@ -36,6 +37,7 @@ export function createApp(): Express {
   app.use(API_PREFIX, authRouter);
   app.use(API_PREFIX, userRouter);
   app.use(API_PREFIX, matchingRouter);
+  app.use(API_PREFIX, messagingRouter);
 
   // Feature routers (wall, communities, ...) mount under API_PREFIX in later phases.
 

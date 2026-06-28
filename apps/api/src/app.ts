@@ -34,7 +34,24 @@ export function createApp(): Express {
   app.set('trust proxy', 1); // behind Nginx (ARCHITECTURE.md §14)
 
   app.use(helmet());
-  app.use(cors({ origin: config.CORS_ORIGINS, credentials: true }));
+
+  const allowedOrigins = config.CORS_ORIGINS;
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+          callback(null, true);
+          return;
+        }
+        callback(new Error('Not allowed by CORS'));
+      },
+      credentials: true,
+    }),
+  );
 
   // Local object-storage stand-in handles raw binary uploads/downloads and MUST
   // be mounted before the JSON body parser (dev only — MEDIA_DRIVER=local).

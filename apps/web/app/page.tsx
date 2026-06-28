@@ -146,14 +146,106 @@ export default function LandingPage() {
 
           {/* Hero */}
           <main className="flex flex-1 flex-col items-center justify-center px-space-5 text-center">
-            <div className="mb-space-7" aria-label="Campusly logo mark">
-              <div className="relative grid h-20 w-20 place-items-center rounded-full border border-border/70 bg-surface/35 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset] backdrop-blur-sm">
-                <span className="font-display text-[2rem] font-bold leading-none text-foreground">
-                  C
-                </span>
-                <span className="absolute -right-1 top-4 h-2.5 w-2.5 rounded-full bg-brand" />
-                <span className="absolute left-3 top-0 h-2 w-2 rounded-full bg-brand/70" />
-                <span className="absolute -left-1 bottom-5 h-2 w-2 rounded-full bg-brand/80" />
+            <div className="mb-space-7 flex justify-center" aria-label="Campusly logo mark">
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-border/40 bg-surface/20 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+                <svg
+                  className="h-20 w-20 animate-[spin_45s_linear_infinite]"
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <radialGradient id="logoGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#F97316" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#F97316" stopOpacity="0" />
+                    </radialGradient>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#F97316" />
+                      <stop offset="100%" stopColor="#FB923C" />
+                    </linearGradient>
+                  </defs>
+                  {/* Glow aura */}
+                  <circle cx="50" cy="50" r="40" fill="url(#logoGlow)" />
+
+                  {/* Outer orbit (forming shape of C) */}
+                  <path
+                    d="M72,22 A32,32 0 1,0 72,78"
+                    stroke="currentColor"
+                    strokeWidth="0.8"
+                    strokeLinecap="round"
+                    className="text-border/60"
+                  />
+
+                  {/* Constellation lattice lines */}
+                  <g stroke="#F97316" strokeWidth="0.8" strokeOpacity="0.3" strokeDasharray="1 1">
+                    <line x1="72" y1="22" x2="50" y2="16" />
+                    <line x1="50" y1="16" x2="28" y2="30" />
+                    <line x1="28" y1="30" x2="20" y2="50" />
+                    <line x1="20" y1="50" x2="28" y2="70" />
+                    <line x1="28" y1="70" x2="50" y2="84" />
+                    <line x1="50" y1="84" x2="72" y2="78" />
+                    {/* Cross lattices */}
+                    <line x1="72" y1="22" x2="28" y2="30" />
+                    <line x1="50" y1="16" x2="20" y2="50" />
+                    <line x1="28" y1="30" x2="28" y2="70" />
+                    <line x1="20" y1="50" x2="50" y2="84" />
+                    <line x1="28" y1="70" x2="72" y2="78" />
+                  </g>
+
+                  {/* Nodes */}
+                  <g>
+                    {/* Node 1 */}
+                    <circle cx="72" cy="22" r="3" fill="#F97316" className="animate-pulse" />
+                    <circle
+                      cx="72"
+                      cy="22"
+                      r="6"
+                      stroke="#F97316"
+                      strokeWidth="0.5"
+                      strokeOpacity="0.4"
+                      className="animate-ping"
+                      style={{ animationDuration: '3.5s' }}
+                    />
+
+                    {/* Node 2 */}
+                    <circle cx="50" cy="16" r="2.5" fill="#E4E4E7" />
+
+                    {/* Node 3 */}
+                    <circle cx="28" cy="30" r="3.5" fill="url(#logoGrad)" />
+
+                    {/* Node 4 */}
+                    <circle cx="20" cy="50" r="3.2" fill="#E4E4E7" />
+                    <circle
+                      cx="20"
+                      cy="50"
+                      r="7"
+                      stroke="#E4E4E7"
+                      strokeWidth="0.5"
+                      strokeOpacity="0.3"
+                      className="animate-ping"
+                      style={{ animationDuration: '4.5s' }}
+                    />
+
+                    {/* Node 5 */}
+                    <circle cx="28" cy="70" r="3.5" fill="url(#logoGrad)" />
+
+                    {/* Node 6 */}
+                    <circle cx="50" cy="84" r="2.5" fill="#E4E4E7" />
+
+                    {/* Node 7 */}
+                    <circle cx="72" cy="78" r="3" fill="#F97316" className="animate-pulse" />
+                    <circle
+                      cx="72"
+                      cy="78"
+                      r="6"
+                      stroke="#F97316"
+                      strokeWidth="0.5"
+                      strokeOpacity="0.4"
+                      className="animate-ping"
+                      style={{ animationDuration: '2.8s' }}
+                    />
+                  </g>
+                </svg>
               </div>
             </div>
 

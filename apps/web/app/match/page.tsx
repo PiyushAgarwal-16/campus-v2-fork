@@ -9,7 +9,7 @@ import {
 } from '@campusly/shared-types';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useMatching } from '../../hooks/useMatching';
-import { apiFetch } from '../../lib/apiClient';
+import { apiFetch, ApiClientError } from '../../lib/apiClient';
 import { friendsApi } from '../../lib/friends';
 import { getSocket } from '../../lib/socket';
 import { AppNav } from '../../components/AppNav';
@@ -61,7 +61,19 @@ export default function MatchPage() {
     void friendsApi
       .sendRequest({ origin: 'session', sessionId })
       .then((res) => setFriendState(res.status === 'accepted' ? 'accepted' : 'sent'))
-      .catch(() => setFriendState('idle'));
+      .catch((err) => {
+        if (err instanceof ApiClientError && err.code === 'conflict') {
+          if (err.message.toLowerCase().includes('already friends')) {
+            setFriendState('accepted');
+          } else if (err.message.toLowerCase().includes('pending request')) {
+            setFriendState('sent');
+          } else {
+            setFriendState('idle');
+          }
+        } else {
+          setFriendState('idle');
+        }
+      });
   };
 
   const acceptFriend = () => {

@@ -9,25 +9,25 @@
  */
 @layer base {
   :root {
-    --background: 0 0% 100%; /* #FFFFFF */
-    --foreground: 222 47% 11%; /* #111827 */
-    --muted: 220 14% 96%; /* #F3F4F6 */
-    --muted-foreground: 220 9% 46%; /* #6B7280 */
-    --surface: 0 0% 100%; /* #FFFFFF - matches background exactly */
-    --border: 0 0% 100%; /* #FFFFFF - hides borders */
-    --divider: 220 14% 96%; /* #F3F4F6 */
+    --background: 0 0% 100%; /* #FFFFFF - Stark white */
+    --foreground: 220 15% 9%; /* #0F1115 - Crisp dark charcoal */
+    --muted: 220 10% 95%; /* #F2F3F4 - Soft muted gray */
+    --muted-foreground: 220 9% 40%; /* #5F6B7C */
+    --surface: 220 10% 97%; /* #F8F9FA - Light surface panels */
+    --border: 220 12% 88%; /* #E1E4E8 - Thin gray outlines */
+    --divider: 220 12% 88%; /* #E1E4E8 */
     --disabled: 216 12% 84%; /* #D1D5DB */
   }
 
   .dark {
-    --background: 240 5% 6%; /* #0F0F11 - soft charcoal, one shade lighter than pitch black */
-    --foreground: 240 5% 96%; /* #F4F4F5 */
-    --muted: 240 5% 11%; /* #1C1C20 */
-    --muted-foreground: 240 5% 65%; /* #A1A1AA */
-    --surface: 240 5% 6%; /* #0F0F11 - matches background exactly */
-    --border: 240 5% 6%; /* #0F0F11 - hides borders */
-    --divider: 240 5% 14%; /* #242427 - subtle dividers */
-    --disabled: 240 5% 22%; /* #37373C */
+    --background: 220 15% 9%; /* #0F1115 - AWS Console dark base */
+    --foreground: 220 10% 95%; /* #F2F3F4 */
+    --muted: 220 10% 15%; /* #232731 */
+    --muted-foreground: 220 8% 65%; /* #A1AAB5 */
+    --surface: 220 13% 13%; /* #1A1D24 - Console surface panels */
+    --border: 220 11% 18%; /* #282E3A - Solid dark outlines */
+    --divider: 220 11% 18%; /* #282E3A */
+    --disabled: 220 10% 28%; /* #3D4452 */
   }
 
   * {

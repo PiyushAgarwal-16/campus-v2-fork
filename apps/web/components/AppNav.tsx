@@ -57,7 +57,7 @@ export function AppNav() {
                 className={cn(
                   'text-caption font-medium transition-all duration-200 flex items-center gap-space-1.5 px-space-3 py-1.5 rounded-button border',
                   isActive
-                    ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(249,115,22,0.12)] backdrop-blur-md'
+                    ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(255,153,0,0.12)] backdrop-blur-md'
                     : 'text-muted-foreground border-transparent hover:text-foreground hover:bg-foreground/5 hover:border-foreground/10',
                 )}
               >
@@ -72,7 +72,7 @@ export function AppNav() {
               className={cn(
                 'text-caption font-medium transition-all duration-200 flex items-center gap-space-1.5 px-space-3 py-1.5 rounded-button border',
                 pathname === '/admin' || pathname.startsWith('/admin/')
-                  ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(249,115,22,0.12)] backdrop-blur-md'
+                  ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(255,153,0,0.12)] backdrop-blur-md'
                   : 'text-danger border-transparent hover:bg-danger/5 hover:border-danger/10',
               )}
             >
@@ -111,14 +111,14 @@ export function AppNav() {
                 className={cn(
                   'flex flex-col items-center justify-center w-11 h-11 rounded-full transition-all duration-200 relative border',
                   isActive
-                    ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(249,115,22,0.12)] backdrop-blur-md scale-105'
+                    ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(255,153,0,0.12)] backdrop-blur-md scale-105'
                     : 'text-muted-foreground bg-foreground/[0.03] border-foreground/[0.08] active:scale-95',
                 )}
               >
                 <Icon className="h-5 w-5" />
                 {/* Active indicator bar */}
                 {isActive && (
-                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#F97316]" />
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#FF9900]" />
                 )}
               </Link>
             );
@@ -129,13 +129,13 @@ export function AppNav() {
               className={cn(
                 'flex flex-col items-center justify-center w-11 h-11 rounded-full transition-all duration-200 relative border',
                 pathname === '/admin' || pathname.startsWith('/admin/')
-                  ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(249,115,22,0.12)] backdrop-blur-md scale-105'
+                  ? 'text-brand bg-brand/10 border-brand/20 shadow-[0_2px_8px_rgba(255,153,0,0.12)] backdrop-blur-md scale-105'
                   : 'text-danger bg-foreground/[0.03] border-foreground/[0.08] active:scale-95',
               )}
             >
               <ShieldAlert className="h-5 w-5" />
               {(pathname === '/admin' || pathname.startsWith('/admin/')) && (
-                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#F97316]" />
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_8px_#FF9900]" />
               )}
             </Link>
           )}

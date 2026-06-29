@@ -13,7 +13,7 @@ const config: Config = {
       colors: {
         // Brand (§3) — Orange is constant across themes.
         brand: {
-          DEFAULT: '#F97316',
+          DEFAULT: '#FF9900',
           foreground: '#FFFFFF',
         },
         // Semantic tokens map to CSS variables (light/dark values in globals.css).

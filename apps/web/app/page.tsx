@@ -156,12 +156,12 @@ export default function LandingPage() {
                 >
                   <defs>
                     <linearGradient id="cGrad1" x1="0" y1="0" x2="100" y2="100">
-                      <stop offset="0%" stopColor="#F97316" />
+                      <stop offset="0%" stopColor="#FF9900" />
                       <stop offset="100%" stopColor="#EA580C" />
                     </linearGradient>
                     <linearGradient id="cGrad2" x1="100" y1="0" x2="0" y2="100">
                       <stop offset="0%" stopColor="#FB923C" />
-                      <stop offset="100%" stopColor="#F97316" />
+                      <stop offset="100%" stopColor="#FF9900" />
                     </linearGradient>
                     <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
                       <feGaussianBlur stdDeviation="2.5" result="blur" />
@@ -205,7 +205,7 @@ export default function LandingPage() {
                     filter="url(#logoGlow)"
                     className="animate-pulse"
                   />
-                  <circle cx="75" cy="32" r="2" fill="#F97316" />
+                  <circle cx="75" cy="32" r="2" fill="#FF9900" />
                 </svg>
               </div>
             </div>

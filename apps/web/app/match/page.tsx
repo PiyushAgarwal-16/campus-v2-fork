@@ -117,7 +117,7 @@ export default function MatchPage() {
         </div>
 
         {/* Central Signal Point */}
-        <div className="absolute h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_8px_#F97316]" />
+        <div className="absolute h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_8px_#FF9900]" />
       </div>
     );
   };
@@ -141,7 +141,7 @@ export default function MatchPage() {
           width: 200px;
           height: 200px;
           border-radius: 50%;
-          border: 1px solid rgba(249, 115, 22, 0.25);
+          border: 1px solid rgba(255, 153, 0, 0.25);
           animation: pulse-radar 2.5s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
           pointer-events: none;
         }
@@ -173,7 +173,7 @@ export default function MatchPage() {
         .ring-3d {
           position: absolute;
           inset: 0;
-          border: 1px solid rgba(249, 115, 22, 0.28);
+          border: 1px solid rgba(255, 153, 0, 0.28);
           border-radius: 50%;
           transform-style: preserve-3d;
           backface-visibility: visible;
@@ -181,17 +181,17 @@ export default function MatchPage() {
         }
 
         .dark .ring-3d {
-          border-color: rgba(249, 115, 22, 0.14);
+          border-color: rgba(255, 153, 0, 0.14);
         }
 
         .sphere-active .ring-3d {
-          border-color: rgba(249, 115, 22, 0.45);
-          box-shadow: 0 0 10px rgba(249, 115, 22, 0.08);
+          border-color: rgba(255, 153, 0, 0.45);
+          box-shadow: 0 0 10px rgba(255, 153, 0, 0.08);
         }
 
         .dark .sphere-active .ring-3d {
-          border-color: rgba(249, 115, 22, 0.28);
-          box-shadow: 0 0 12px rgba(249, 115, 22, 0.04);
+          border-color: rgba(255, 153, 0, 0.28);
+          box-shadow: 0 0 12px rgba(255, 153, 0, 0.04);
         }
 
         /* Vertical Lines */
@@ -234,9 +234,9 @@ export default function MatchPage() {
           position: absolute;
           width: 6px;
           height: 6px;
-          background: #F97316;
+          background: #FF9900;
           border-radius: 50%;
-          box-shadow: 0 0 10px #F97316;
+          box-shadow: 0 0 10px #FF9900;
           transform-style: preserve-3d;
         }
         

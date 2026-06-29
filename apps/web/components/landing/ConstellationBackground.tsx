@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
  * in response to mouse movement (hover ripples), creating a stunning 3D digital landscape.
  * Completely transparent.
  */
-const BRAND = '249, 115, 22'; // #F97316 as RGB for connections
+const BRAND = '255, 153, 0'; // #FF9900 as RGB for connections
 const NODE_COLOR = '255, 255, 255'; // White particle points
 const CAMERA_DISTANCE = 350;
 const TILT_ANGLE = 50 * (Math.PI / 180); // Tilt the grid for 3D floor perspective

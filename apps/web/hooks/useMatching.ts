@@ -10,6 +10,7 @@ import {
   type SessionEndedPayload,
 } from '@campusly/shared-types';
 import { connectSocket, getSocket } from '../lib/socket';
+import type { PublicUserSummary } from '@campusly/shared-types';
 
 /**
  * Client state machine for anonymous matching (SOCKET_EVENTS.md §4).
@@ -19,6 +20,7 @@ import { connectSocket, getSocket } from '../lib/socket';
 export function useMatching() {
   const [state, setState] = useState<MatchState>('idle');
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [partner, setPartner] = useState<PublicUserSummary | null>(null);
   const [endedReason, setEndedReason] = useState<string | null>(null);
   const heartbeat = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -40,10 +42,12 @@ export function useMatching() {
     const onStarted = (p: SessionStartedPayload) => {
       stopHeartbeat();
       setSessionId(p.sessionId);
+      setPartner(p.partner ?? null);
       setState('in_session');
     };
     const onEnded = (p: SessionEndedPayload) => {
       setSessionId(null);
+      setPartner(null);
       setState('idle');
       setEndedReason(p.reason);
     };
@@ -96,5 +100,5 @@ export function useMatching() {
     setSessionId(null);
   }, [sessionId]);
 
-  return { state, sessionId, endedReason, findMatch, cancel, leaveSession };
+  return { state, sessionId, partner, endedReason, findMatch, cancel, leaveSession };
 }

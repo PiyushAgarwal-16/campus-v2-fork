@@ -22,6 +22,7 @@ export const MATCH_SERVER_EVENTS = {
 } as const;
 
 /** Matching lifecycle state as seen by a client (for status reconciliation). */
+import type { PublicUserSummary } from './friends';
 export type MatchState = 'idle' | 'waiting' | 'in_session';
 
 export interface QueueStatusPayload {
@@ -36,6 +37,7 @@ export interface MatchFoundPayload {
 export interface SessionStartedPayload {
   sessionId: string;
   startedAt: string;
+  partner?: PublicUserSummary | null;
 }
 
 export type SessionEndReason = 'left' | 'disconnect' | 'expired' | 'reported';

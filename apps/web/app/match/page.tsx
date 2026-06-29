@@ -9,12 +9,13 @@ import {
 } from '@campusly/shared-types';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useMatching } from '../../hooks/useMatching';
-import { apiFetch, ApiClientError } from '../../lib/apiClient';
+import { apiFetch } from '../../lib/apiClient';
 import { friendsApi } from '../../lib/friends';
 import { getSocket } from '../../lib/socket';
 import { AppNav } from '../../components/AppNav';
 import { Chat } from '../../components/Chat';
 import { Globe3D } from '../../components/Globe3D';
+import { Avatar } from '../../components/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
@@ -23,7 +24,7 @@ type FriendState = 'idle' | 'sent' | 'incoming' | 'accepted';
 
 export default function MatchPage() {
   const { user, isLoading } = useRequireAuth();
-  const { state, sessionId, findMatch, cancel, leaveSession } = useMatching();
+  const { state, sessionId, partner, findMatch, cancel, leaveSession } = useMatching();
   const [reporting, setReporting] = useState(false);
   const [friendState, setFriendState] = useState<FriendState>('idle');
   const [incomingRequestId, setIncomingRequestId] = useState<string | null>(null);
@@ -60,19 +61,7 @@ export default function MatchPage() {
     void friendsApi
       .sendRequest({ origin: 'session', sessionId })
       .then((res) => setFriendState(res.status === 'accepted' ? 'accepted' : 'sent'))
-      .catch((err) => {
-        if (err instanceof ApiClientError && err.code === 'conflict') {
-          if (err.message.toLowerCase().includes('already friends')) {
-            setFriendState('accepted');
-          } else if (err.message.toLowerCase().includes('pending request')) {
-            setFriendState('sent');
-          } else {
-            setFriendState('idle');
-          }
-        } else {
-          setFriendState('idle');
-        }
-      });
+      .catch(() => setFriendState('idle'));
   };
 
   const acceptFriend = () => {
@@ -150,9 +139,19 @@ export default function MatchPage() {
                     <div className="flex items-center justify-between gap-space-3 border-b border-divider pb-space-3 shrink-0">
                       <div className="flex items-center gap-space-2 select-none">
                         <span className="inline-block h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
-                        <span className="text-body font-medium text-foreground">
-                          Connected — anonymous
-                        </span>
+                        {partner ? (
+                          <div className="flex items-center gap-space-2">
+                            <Avatar name={partner.name} mediaId={partner.avatarMediaId} size="sm" />
+                            <span className="text-body font-medium text-foreground flex items-center gap-1">
+                              {partner.name}
+                              <span className="text-small text-brand font-semibold">(Friend)</span>
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-body font-medium text-foreground">
+                            Connected — anonymous
+                          </span>
+                        )}
                       </div>
                       <div className="flex gap-space-2">
                         {friendState === 'incoming' ? (

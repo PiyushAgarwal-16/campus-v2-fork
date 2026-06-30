@@ -133,7 +133,7 @@ export default function LandingPage() {
           {/* Top bar */}
           <header className="flex items-center justify-between px-space-5 py-space-5 md:px-space-12">
             <span className="font-display text-h3 font-bold tracking-tight">
-              Campus<span className="text-brand">ly</span>
+              Anonymous<span className="text-brand">U</span>
             </span>
             <button
               type="button"

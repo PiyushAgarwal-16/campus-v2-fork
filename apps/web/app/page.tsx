@@ -155,57 +155,50 @@ export default function LandingPage() {
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <defs>
-                    <linearGradient id="cGrad1" x1="0" y1="0" x2="100" y2="100">
-                      <stop offset="0%" stopColor="#FF9900" />
+                    <linearGradient id="uGrad" x1="0" y1="0" x2="100" y2="100">
+                      <stop offset="0%" stopColor="#FFB347" />
+                      <stop offset="50%" stopColor="#FF9900" />
                       <stop offset="100%" stopColor="#EA580C" />
                     </linearGradient>
-                    <linearGradient id="cGrad2" x1="100" y1="0" x2="0" y2="100">
-                      <stop offset="0%" stopColor="#FB923C" />
-                      <stop offset="100%" stopColor="#FF9900" />
-                    </linearGradient>
                     <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="2.5" result="blur" />
+                      <feGaussianBlur stdDeviation="2" result="blur" />
                       <feComposite in="SourceGraphic" in2="blur" operator="over" />
                     </filter>
                   </defs>
 
-                  {/* Outer orbital track */}
+                  {/* Outer orbital ring */}
                   <circle
                     cx="50"
                     cy="50"
-                    r="42"
+                    r="46"
                     stroke="currentColor"
-                    strokeWidth="0.8"
-                    strokeDasharray="4 4"
-                    className="text-border/40 animate-[spin_80s_linear_infinite]"
+                    strokeWidth="0.6"
+                    strokeDasharray="3 5"
+                    className="text-border/30 animate-[spin_90s_linear_infinite]"
                   />
 
-                  {/* Overlapping Loop 1 (Back arc) */}
+                  {/* Bold U shape */}
                   <path
-                    d="M75,32 A 28,28 0 1, 0 75,68"
-                    stroke="url(#cGrad1)"
-                    strokeWidth="9"
+                    d="M24,18 L24,58 C24,74 36,86 50,86 C64,86 76,74 76,58 L76,18"
+                    stroke="url(#uGrad)"
+                    strokeWidth="11"
                     strokeLinecap="round"
+                    fill="none"
                   />
 
-                  {/* Overlapping Loop 2 (Front offset arc creating depth) */}
-                  <path
-                    d="M75,32 C 60,18 36,22 29,38 C 21,54 25,72 43,78"
-                    stroke="url(#cGrad2)"
-                    strokeWidth="9"
-                    strokeLinecap="round"
-                  />
+                  {/* Faceless silhouette head */}
+                  <circle cx="50" cy="30" r="12" fill="url(#uGrad)" />
 
-                  {/* Connecting spark */}
+                  {/* Subtle glow dot on top */}
                   <circle
-                    cx="75"
-                    cy="32"
-                    r="4.5"
+                    cx="50"
+                    cy="16"
+                    r="3"
                     fill="#FFFFFF"
                     filter="url(#logoGlow)"
                     className="animate-pulse"
                   />
-                  <circle cx="75" cy="32" r="2" fill="#FF9900" />
+                  <circle cx="50" cy="16" r="1.5" fill="#FF9900" />
                 </svg>
               </div>
             </div>

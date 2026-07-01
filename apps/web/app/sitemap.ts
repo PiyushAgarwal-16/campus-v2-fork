@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 export default function sitemap(): MetadataRoute.Sitemap {
   // Use the production domain as the default fallback.
   // Add NEXT_PUBLIC_APP_URL to your .env file to override this for local dev or staging.
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://anonymousU.live'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.anonymousU.live'
 
   return [
     {

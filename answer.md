@@ -1,20 +1,26 @@
-Proceed with the asynchronous `StorageProvider` refactor only. Do **not** implement the GCS provider yet.
+The HTTPS firewall rule has already been created successfully.
 
-One important correction: the deployment target is **Google Compute Engine (GCE) on a single VM**, not Cloud Run. The deployment strategy has changed.
+The first command completed successfully and `campusly-allow-https` now exists.
 
-For authentication, use **Google Application Default Credentials (ADC)** as the primary authentication model.
+The second command failed only because it attempted to create the same firewall rule again, and Google Cloud correctly reported that the resource already exists.
 
-Requirements:
+Continue from this point.
 
-* **Production (GCE VM):** authenticate using the VM's attached service account via ADC. Do **not** require a mounted service-account key file.
-* **Local development:** support `GOOGLE_APPLICATION_CREDENTIALS` pointing to a service account JSON file for developers who are not running on GCP. This should be optional and only used when ADC is unavailable.
-* Initialize the Google Cloud Storage SDK using ADC (optionally with `projectId` from configuration), and avoid hardcoded credential paths or assumptions about key files.
-* Keep the implementation cloud-agnostic where possible and follow Google's recommended authentication practices.
+Do not recreate the firewall rule.
 
-For this task, only complete the asynchronous `StorageProvider` refactor. Do not implement the GCS provider, modify API contracts, or introduce unrelated changes.
+Proceed with the remaining Stage 5 tasks:
 
-At the end, confirm that:
+1. Verify external HTTPS through `https://api.anonymousu.live`.
+2. Verify external WebSocket (WSS) through the public domain.
+3. Enable the HTTP → HTTPS permanent redirect.
+4. Reload Nginx.
+5. Verify:
 
-* the project behavior remains unchanged,
-* all storage call sites have been updated correctly,
-* the codebase is ready for the next task: implementing the Google Cloud Storage provider using ADC on GCE.
+   * HTTP returns 301 or 308.
+   * HTTPS returns HTTP 200.
+   * WebSockets continue working over HTTPS.
+6. Perform the final Nginx and PM2 log inspection.
+
+If all checks pass, mark Stage 5 as complete and stop.
+
+Do not begin the frontend deployment, OAuth configuration, or any later stages.

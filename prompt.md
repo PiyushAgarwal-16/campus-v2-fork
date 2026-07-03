@@ -1,22 +1,57 @@
-Excellent implementation.
+Google OAuth is fully working.
 
-Before we move on, perform one verification regarding IAM permissions.
+The Google popup appears, I can select my account, grant permission, and the backend verifies the Google ID token.
 
-You mentioned that the GCE VM's attached service account may require:
+However, after verification the backend responds:
 
-`roles/iam.serviceAccountTokenCreator`
+"Your email is not from a recognized campus. AnonymousU is for verified students only."
 
-Please verify this against the behavior of the official `@google-cloud/storage` SDK when generating V4 signed URLs using Application Default Credentials on a Google Compute Engine VM.
+The account I used is:
 
-Specifically determine:
+*@poornima.edu.in
 
-* Whether this role is actually required.
-* Under what circumstances it is required.
-* Whether the SDK signs locally or calls the IAM Credentials SignBlob API when using ADC on GCE.
-* The minimum IAM roles required for:
+This domain is intended to be supported.
 
-  * generating signed upload URLs,
-  * generating signed download URLs,
-  * deleting objects.
+Do NOT guess.
 
-If any earlier assumptions are incorrect, update the implementation notes only. Do not modify the code unless a genuine implementation issue is discovered.
+Trace the entire backend authentication flow and identify the exact reason for the rejection.
+
+Requirements:
+
+1. Find the exact line of code that produces the message:
+   "Your email is not from a recognized campus. AnonymousU is for verified students only."
+
+2. Trace the authentication flow from:
+   POST /auth/google
+   until the rejection occurs.
+
+3. Log (without exposing secrets):
+   - verified Google email
+   - extracted email domain
+   - hd claim
+   - campus lookup input
+   - lookup result
+   - final rejection reason
+
+4. Determine whether the rejection is caused by:
+   - a hardcoded whitelist
+   - the campuses database/table
+   - missing seed data
+   - regex/domain parsing
+   - Google hd claim
+   - another validation step
+
+5. Search the entire repository for:
+   - poornima
+   - edu.in
+   - recognized campus
+   - campus domain
+   - allowed domains
+
+6. If poornima.edu.in is missing from the configured campuses, add it in the correct place (seed/config/database), not as a temporary hardcoded exception.
+
+7. If the lookup logic is incorrect (for example, extracting the wrong domain), fix the logic instead.
+
+8. Verify by performing a real login with a poornima.edu.in account and confirm authentication succeeds.
+
+Do not stop after identifying the issue. Fix the root cause and verify the complete login flow.

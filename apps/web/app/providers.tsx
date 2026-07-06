@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '../components/AuthProvider';
+import { InstallPrompt } from '../components/InstallPrompt';
 
 /**
  * Client-side providers: React Query (server state), theme (dark-first,
@@ -23,7 +24,10 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <InstallPrompt />
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

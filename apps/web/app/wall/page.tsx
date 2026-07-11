@@ -166,9 +166,9 @@ export default function WallPage() {
 
         {/* Scrollable Feed Container */}
         <div className="flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-2xl md:max-w-4xl px-space-4 py-space-5 pb-24 md:pb-8 flex flex-col gap-space-4">
+          <div className="mx-auto max-w-2xl md:max-w-4xl px-0 md:px-space-4 py-space-5 pb-24 md:pb-8 flex flex-col gap-space-4">
             {posts.length === 0 && !loading && (
-              <p className="py-space-12 text-center text-caption text-muted-foreground">
+              <p className="py-space-12 text-center text-caption text-muted-foreground px-space-4">
                 Nothing here yet. Be the first to post.
               </p>
             )}
@@ -182,14 +182,16 @@ export default function WallPage() {
             ))}
 
             {mode === 'latest' && cursor && (
-              <Button
-                variant="secondary"
-                disabled={loading}
-                onClick={() => void load(false)}
-                className="w-full mt-space-2 rounded-full py-2.5 active:scale-95 transition-all shadow-sm"
-              >
-                {loading ? 'Loading…' : 'Load more'}
-              </Button>
+              <div className="px-space-4 md:px-0 w-full">
+                <Button
+                  variant="secondary"
+                  disabled={loading}
+                  onClick={() => void load(false)}
+                  className="w-full mt-space-2 rounded-full py-2.5 active:scale-95 transition-all shadow-sm"
+                >
+                  {loading ? 'Loading…' : 'Load more'}
+                </Button>
+              </div>
             )}
           </div>
         </div>

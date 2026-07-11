@@ -70,7 +70,7 @@ export function PostCard({
   const totalVotes = post.poll?.reduce((s, o) => s + o.voteCount, 0) ?? 0;
 
   return (
-    <Card className="flex flex-col gap-space-3 hover:shadow-md transition-shadow">
+    <Card className="flex flex-col gap-space-3 hover:shadow-md transition-shadow rounded-none md:rounded-card border-x-0 md:border-x">
       <div className="flex items-center justify-between gap-space-2 select-none">
         <div className="flex items-center gap-space-3">
           <Avatar
@@ -104,7 +104,7 @@ export function PostCard({
       {post.body && <p className="whitespace-pre-wrap text-body text-foreground">{post.body}</p>}
 
       {post.mediaIds.length > 0 && (
-        <div className="flex flex-col gap-space-2">
+        <div className="-mx-space-5 border-y border-border/40 flex flex-col bg-muted/5 overflow-hidden">
           {post.mediaIds.map((mediaId) => (
             <MediaAttachment
               key={mediaId}

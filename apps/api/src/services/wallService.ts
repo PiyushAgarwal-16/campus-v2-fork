@@ -5,7 +5,6 @@ import type {
   ReactionType,
   WallPost,
   WallReply,
-  WallAuthor,
   WallCategory,
   PollOption,
 } from '@campusly/shared-types';
@@ -14,9 +13,11 @@ import { ForbiddenError, NotFoundError, ValidationError } from '../domain/errors
 import type { WallPostRow, WallReplyRow } from '../db/schema.js';
 import { wallRepository } from '../repositories/wallRepository.js';
 import { userRepository } from '../repositories/userRepository.js';
+import { generateAnonHandle } from '../lib/anonHandle.js';
 import { mediaRepository } from '../repositories/mediaRepository.js';
 import { reportRepository } from '../repositories/reportRepository.js';
 import { notifier } from '../realtime/notifier.js';
+import { notificationService } from './notificationService.js';
 
 /**
  * Campus Wall business logic (PUBLIC_WALL.md). Campus-scoped, accountable
@@ -56,25 +57,27 @@ export const wallService = {
     // Validate any attached media is the user's own active media.
     if (input.mediaIds?.length) {
       const media = await mediaRepository.findManyByIds(input.mediaIds);
+      // Wall attachments are images only (SECURITY.md — restrict upload surface).
       const valid = media.filter(
-        (m) =>
-          m.ownerId === claims.sub &&
-          m.status === 'active' &&
-          (m.kind === 'image' || m.kind === 'video'),
+        (m) => m.ownerId === claims.sub && m.status === 'active' && m.kind === 'image',
       );
       if (valid.length !== input.mediaIds.length) {
-        throw new ValidationError('One or more attachments are invalid.');
+        throw new ValidationError('Only image attachments are allowed on the wall.');
       }
     }
 
+    // Every wall post is anonymous now (accountable anonymity §7): author_id is
+    // still retained server-side, but never exposed. Ignore any client flag.
     const post = await wallRepository.insertPost({
       universityId: claims.universityId,
       authorId: claims.sub,
-      isAnonymous: input.isAnonymous,
+      isAnonymous: true,
       categoryId: input.categoryId ?? null,
       postType: input.postType,
       body: input.body ?? null,
     });
+    // Pre-warm the author's permanent handle so it is ready on first read.
+    await this.resolveHandles([claims.sub]);
     if (input.tags?.length) await wallRepository.attachTags(post.id, input.tags);
     if (input.mediaIds?.length) await wallRepository.attachMedia(post.id, input.mediaIds);
     if (input.postType === 'poll' && input.pollOptions?.length) {
@@ -178,11 +181,12 @@ export const wallService = {
     postId: string,
     input: CreateReplyInput,
   ): Promise<WallReply> {
-    await this.requireVisiblePost(postId, claims.universityId);
+    const post = await this.requireVisiblePost(postId, claims.universityId);
+    // Replies are always anonymous now; author_id is retained server-side only.
     const row = await wallRepository.insertReply({
       postId,
       authorId: claims.sub,
-      isAnonymous: input.isAnonymous,
+      isAnonymous: true,
       body: input.body,
     });
     await wallRepository.incReplyCount(postId, 1);
@@ -193,6 +197,10 @@ export const wallService = {
       postId,
       reply: publicReply,
     });
+    // Notify the post author using the replier's pseudonymous handle (never the real name).
+    const handles = await this.resolveHandles([claims.sub]);
+    const replierName = handles.get(claims.sub) ?? 'Someone';
+    void notificationService.wallReply(post.authorId, claims.sub, replierName, postId);
     return reply;
   },
 
@@ -219,6 +227,20 @@ export const wallService = {
       targetId,
       count,
     });
+    // Notify the post author when someone reacts to their post, using the
+    // actor's pseudonymous handle (never their real name).
+    if (targetType === 'wall_post') {
+      const post = await wallRepository.getPostById(targetId);
+      if (post && post.authorId !== claims.sub) {
+        const handles = await this.resolveHandles([claims.sub]);
+        void notificationService.wallReaction(
+          post.authorId,
+          claims.sub,
+          handles.get(claims.sub) ?? 'Someone',
+          targetId,
+        );
+      }
+    }
     return { count };
   },
 
@@ -325,18 +347,49 @@ export const wallService = {
     await this.requireVisiblePost(reply.postId, universityId);
   },
 
+  /**
+   * Resolve permanent pseudonymous handles for a set of authors, assigning one
+   * lazily to any user who does not yet have it (PUBLIC_WALL.md §7). Handles are
+   * unique; on a collision we retry with a wider candidate space.
+   */
+  async resolveHandles(ids: string[]): Promise<Map<string, string>> {
+    const unique = [...new Set(ids)];
+    const map = await userRepository.getAnonHandles(unique);
+    for (const id of unique) {
+      if (map.has(id)) continue;
+      let resolved: string | null = null;
+      for (let attempt = 0; attempt < 6 && resolved === null; attempt += 1) {
+        const candidate = generateAnonHandle(attempt);
+        const result = await userRepository.assignAnonHandleIfEmpty(id, candidate);
+        if (result.assigned || result.handle !== null) {
+          // Either we claimed it, or the user already had a handle (race).
+          resolved = result.handle;
+        }
+        // Otherwise a unique conflict occurred: loop and retry with a new candidate.
+      }
+      if (resolved === null) {
+        // Final fallback: a very wide candidate plus a short random suffix.
+        const fallbackBase = generateAnonHandle(99);
+        const suffix = Math.random().toString(36).slice(2, 6);
+        const result = await userRepository.assignAnonHandleIfEmpty(id, `${fallbackBase}${suffix}`);
+        resolved = result.handle ?? `${fallbackBase}${suffix}`;
+      }
+      map.set(id, resolved);
+    }
+    return map;
+  },
+
   /** Assemble post DTOs. viewerId null → no viewer-specific state (broadcast). */
   async assemblePosts(viewerId: string | null, rows: WallPostRow[]): Promise<WallPost[]> {
     if (rows.length === 0) return [];
     const ids = rows.map((r) => r.id);
-    const authorIds = rows.filter((r) => !r.isAnonymous).map((r) => r.authorId);
     const categoryIds = [
       ...new Set(rows.map((r) => r.categoryId).filter((c): c is string => Boolean(c))),
     ];
 
-    const [authors, tagsMap, mediaMap, pollMap, myReactions, bookmarked, myVotes, categories] =
+    const [handles, tagsMap, mediaMap, pollMap, myReactions, bookmarked, myVotes, categories] =
       await Promise.all([
-        userRepository.getPublicSummaries(authorIds),
+        this.resolveHandles(rows.map((r) => r.authorId)),
         wallRepository.tagsForPosts(ids),
         wallRepository.mediaForPosts(ids),
         wallRepository.pollOptionsForPosts(ids),
@@ -349,9 +402,6 @@ export const wallService = {
       ]);
 
     return rows.map((r) => {
-      const author: WallAuthor | null = r.isAnonymous
-        ? null
-        : authorSummaryToAuthor(authors.get(r.authorId));
       const pollRows = pollMap.get(r.id);
       const poll: PollOption[] | null =
         r.postType === 'poll' && pollRows
@@ -359,8 +409,10 @@ export const wallService = {
           : null;
       return {
         id: r.id,
-        author,
-        isAnonymous: r.isAnonymous,
+        author: null,
+        authorHandle: handles.get(r.authorId) ?? 'Anonymous',
+        mine: viewerId !== null && r.authorId === viewerId,
+        isAnonymous: true,
         postType: r.postType,
         category: categories.get(r.categoryId ?? '') ?? null,
         body: r.body,
@@ -381,9 +433,8 @@ export const wallService = {
   async assembleReplies(viewerId: string | null, rows: WallReplyRow[]): Promise<WallReply[]> {
     if (rows.length === 0) return [];
     const ids = rows.map((r) => r.id);
-    const authorIds = rows.filter((r) => !r.isAnonymous).map((r) => r.authorId);
-    const [authors, myReactions] = await Promise.all([
-      userRepository.getPublicSummaries(authorIds),
+    const [handles, myReactions] = await Promise.all([
+      this.resolveHandles(rows.map((r) => r.authorId)),
       viewerId
         ? wallRepository.myReactions(viewerId, 'wall_reply', ids)
         : Promise.resolve(new Map()),
@@ -391,8 +442,10 @@ export const wallService = {
     return rows.map((r) => ({
       id: r.id,
       postId: r.postId,
-      author: r.isAnonymous ? null : authorSummaryToAuthor(authors.get(r.authorId)),
-      isAnonymous: r.isAnonymous,
+      author: null,
+      authorHandle: handles.get(r.authorId) ?? 'Anonymous',
+      mine: viewerId !== null && r.authorId === viewerId,
+      isAnonymous: true,
       body: r.body,
       reactionCount: r.reactionCount,
       myReaction: (myReactions.get(r.id) as ReactionType | undefined) ?? null,
@@ -409,12 +462,6 @@ export const wallService = {
     return map;
   },
 };
-
-function authorSummaryToAuthor(
-  s: { id: string; name: string; avatarMediaId: string | null } | undefined,
-): WallAuthor | null {
-  return s ? { id: s.id, name: s.name, avatarMediaId: s.avatarMediaId } : null;
-}
 
 /**
  * Trending materialization (PUBLIC_WALL.md §5, DATABASE_SCHEMA.md §10.8): a

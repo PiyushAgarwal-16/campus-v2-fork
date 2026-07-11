@@ -24,6 +24,15 @@ export const universityRepository = {
     return rows[0] ?? null;
   },
 
+  /** All active universities (for admin pickers), ordered by name. */
+  async listActive(): Promise<UniversityRow[]> {
+    return db
+      .select()
+      .from(universities)
+      .where(eq(universities.isActive, true))
+      .orderBy(universities.name);
+  },
+
   /**
    * DEV-ONLY fallback university for open sign-in (AUTH_ALLOW_ANY_DOMAIN).
    * Upserts a single "Open Campus (Dev)" row so users from unrecognized domains

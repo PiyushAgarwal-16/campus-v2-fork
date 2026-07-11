@@ -10,6 +10,23 @@ import type {
   ApplyActionInput,
   SetUserStatusInput,
   CreateAnnouncementInput,
+  UserSubscriptionState,
+  SubscriptionPlan,
+  ReportContext,
+  InspectedPost,
+  InspectedMediaMeta,
+  ConversationTranscript,
+  BulkActionResult,
+  UniversityOption,
+  CreateUserInput,
+  EditUserInput,
+  ChangeRoleInput,
+  DeleteUserInput,
+  GrantSubscriptionInput,
+  ChangeSubscriptionInput,
+  RevokeSubscriptionInput,
+  BulkActionInput,
+  InspectConversationInput,
 } from '@campusly/shared-types';
 import { apiFetch } from './apiClient';
 
@@ -78,4 +95,107 @@ export const adminApi = {
     const q = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
     return apiFetch<{ logs: AuditLogItem[]; nextCursor: string | null }>(`/admin/audit-logs${q}`);
   },
+
+  // --- User lifecycle (Requirements 4, 5) ---
+
+  createUser: (input: CreateUserInput) =>
+    apiFetch<{ user: AdminUser }>('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  editUser: (id: string, input: EditUserInput) =>
+    apiFetch<{ user: AdminUser }>(`/admin/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  changeUserRole: (id: string, input: ChangeRoleInput) =>
+    apiFetch<{ user: AdminUser }>(`/admin/users/${id}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  deleteUser: (id: string, input: DeleteUserInput) =>
+    apiFetch(`/admin/users/${id}`, { method: 'DELETE', body: JSON.stringify(input) }),
+
+  // --- Subscriptions (Requirement 6) ---
+
+  getSubscription: (userId: string) =>
+    apiFetch<{ subscription: UserSubscriptionState }>(`/admin/users/${userId}/subscription`),
+
+  grantSubscription: (userId: string, input: GrantSubscriptionInput) =>
+    apiFetch<{ subscription: UserSubscriptionState }>(`/admin/users/${userId}/subscription/grant`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  revokeSubscription: (userId: string, input: RevokeSubscriptionInput) =>
+    apiFetch(`/admin/users/${userId}/subscription/revoke`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  changeSubscription: (userId: string, input: ChangeSubscriptionInput) =>
+    apiFetch<{ subscription: UserSubscriptionState }>(`/admin/users/${userId}/subscription`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  subscriptionPlans: () => apiFetch<{ plans: SubscriptionPlan[] }>('/admin/subscription-plans'),
+
+  universities: () =>
+    apiFetch<{ universities: UniversityOption[] }>('/admin/universities').then(
+      (d) => d.universities,
+    ),
+
+  // --- Report context (Requirement 7) ---
+
+  reportContext: (id: string, reveal?: boolean) => {
+    const q = reveal ? '?reveal=true' : '';
+    return apiFetch<ReportContext>(`/admin/reports/${id}/context${q}`);
+  },
+
+  // --- Bulk actions (Requirement 11) ---
+
+  bulkAction: (input: BulkActionInput) =>
+    apiFetch<{ results: BulkActionResult[] }>('/admin/bulk-actions', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  // --- Data inspector (Requirement 8) ---
+
+  inspectorPosts: (cursor?: string) => {
+    const q = new URLSearchParams();
+    if (cursor) q.set('cursor', cursor);
+    return apiFetch<{ items: InspectedPost[]; nextCursor: string | null }>(
+      `/admin/inspector/posts?${q.toString()}`,
+    );
+  },
+
+  inspectorCommunityPosts: (cursor?: string) => {
+    const q = new URLSearchParams();
+    if (cursor) q.set('cursor', cursor);
+    return apiFetch<{ items: InspectedPost[]; nextCursor: string | null }>(
+      `/admin/inspector/community-posts?${q.toString()}`,
+    );
+  },
+
+  inspectorMedia: (cursor?: string) => {
+    const q = new URLSearchParams();
+    if (cursor) q.set('cursor', cursor);
+    return apiFetch<{ items: InspectedMediaMeta[]; nextCursor: string | null }>(
+      `/admin/inspector/media?${q.toString()}`,
+    );
+  },
+
+  inspectConversation: (input: InspectConversationInput) =>
+    apiFetch<ConversationTranscript>('/admin/inspector/conversation', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  mediaUrl: (id: string) =>
+    apiFetch<{ url: string; expiresAt: string }>(`/admin/inspector/media/${id}/url`),
 };

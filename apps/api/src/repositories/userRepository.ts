@@ -1,5 +1,5 @@
 import { and, eq, ilike, inArray, isNull, or } from 'drizzle-orm';
-import type { AccountStatus } from '@campusly/shared-types';
+import type { AccountStatus, UserRole } from '@campusly/shared-types';
 import { db } from '../db/client.js';
 import {
   users,
@@ -77,6 +77,11 @@ export const userRepository = {
       .update(users)
       .set({ accountStatus: status, updatedAt: new Date() })
       .where(eq(users.id, id));
+  },
+
+  /** Updates a user's platform role (used by bootstrap-admin promotion). */
+  async updateRole(id: string, role: UserRole): Promise<void> {
+    await db.update(users).set({ role, updatedAt: new Date() }).where(eq(users.id, id));
   },
 
   /** Updates editable/verified core user fields (name, year, branch). */
@@ -183,5 +188,53 @@ export const userRepository = {
       });
     }
     return map;
+  },
+
+  /**
+   * Batch-resolve existing pseudonymous wall handles for a set of users
+   * (PUBLIC_WALL.md §7). Only rows whose anon_handle is already assigned are
+   * included; callers assign one lazily for the rest.
+   */
+  async getAnonHandles(ids: string[]): Promise<Map<string, string>> {
+    const map = new Map<string, string>();
+    if (ids.length === 0) return map;
+    const rows = await db
+      .select({ id: users.id, anonHandle: users.anonHandle })
+      .from(users)
+      .where(inArray(users.id, ids));
+    for (const r of rows) {
+      if (r.anonHandle !== null) map.set(r.id, r.anonHandle);
+    }
+    return map;
+  },
+
+  /**
+   * Atomically claims a pseudonymous handle for a user only if they do not yet
+   * have one. Returns { assigned: true, handle } when this call set it. When the
+   * user already had a handle, re-reads and returns { assigned: false, handle }.
+   * A unique-constraint violation (another user owns the candidate) is caught
+   * and surfaced as { assigned: false, handle: null } so the caller can retry.
+   */
+  async assignAnonHandleIfEmpty(
+    id: string,
+    handle: string,
+  ): Promise<{ assigned: boolean; handle: string | null }> {
+    try {
+      const updated = await db
+        .update(users)
+        .set({ anonHandle: handle, updatedAt: new Date() })
+        .where(and(eq(users.id, id), isNull(users.anonHandle)))
+        .returning({ anonHandle: users.anonHandle });
+      const row = updated[0];
+      if (row && row.anonHandle !== null) {
+        return { assigned: true, handle: row.anonHandle };
+      }
+      // No row updated → the user already had a handle; return the current one.
+      const existing = await this.findById(id);
+      return { assigned: false, handle: existing?.anonHandle ?? null };
+    } catch {
+      // Unique-constraint violation: the candidate handle is taken. Signal retry.
+      return { assigned: false, handle: null };
+    }
   },
 };

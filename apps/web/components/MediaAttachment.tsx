@@ -82,19 +82,28 @@ export function MediaAttachment({
     return <audio controls src={url} className="max-w-full" aria-label="Voice message" />;
   }
   if (attachment.kind === 'video') {
+    if (context === 'wall') {
+      return (
+        <video
+          controls
+          src={url}
+          className={cn('w-full h-auto max-h-[75vh] object-contain bg-black/90', imgClassName)}
+        />
+      );
+    }
     return <video controls src={url} className="max-h-64 max-w-full rounded-card" />;
   }
 
   // Handle images
   if (attachment.kind === 'image') {
-    // Wall context — render clean, no blur, no expiry
+    // Wall context — render clean, no blur, no expiry, full size, edge-to-edge
     if (context === 'wall') {
       return (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={url}
           alt="Shared media"
-          className={cn('max-h-96 w-full rounded-card object-cover', imgClassName)}
+          className={cn('w-full h-auto max-h-[75vh] object-contain bg-muted/10', imgClassName)}
           loading="lazy"
         />
       );

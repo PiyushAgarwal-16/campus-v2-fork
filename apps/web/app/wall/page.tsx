@@ -9,8 +9,10 @@ import { connectSocket, getSocket } from '../../lib/socket';
 import { AppNav } from '../../components/AppNav';
 import { Composer } from '../../components/wall/Composer';
 import { PostCard } from '../../components/wall/PostCard';
+import { AnnouncementBanner } from '../../components/wall/AnnouncementBanner';
+import { FeedSkeleton } from '../../components/wall/PostSkeleton';
 import { Button } from '../../components/ui/Button';
-import { Plus, Flame, Clock } from 'lucide-react';
+import { Plus, SlidersHorizontal, ChevronDown, Check } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 /**
@@ -26,6 +28,14 @@ export default function WallPage() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    if (!showFilters) return;
+    const handleOutsideClick = () => setShowFilters(false);
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [showFilters]);
 
   useEffect(() => {
     void wallApi.categories().then(setCategories);
@@ -90,7 +100,7 @@ export default function WallPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Fixed Header & Filters Container */}
         <div className="w-full shrink-0 bg-background border-b border-divider z-10">
-          <div className="mx-auto max-w-2xl md:max-w-4xl px-space-4 py-2 md:py-space-4 flex flex-col gap-2 md:gap-space-4">
+          <div className="mx-auto max-w-xl px-space-4 py-2 md:py-space-4 flex flex-col gap-2 md:gap-space-4">
             {/* Minimalist Top Header (Desktop only) */}
             <div className="hidden md:flex items-center justify-between gap-space-4 select-none shrink-0">
               <h1 className="text-h2 font-bold font-display text-foreground">Campus Wall</h1>
@@ -104,74 +114,150 @@ export default function WallPage() {
               </Button>
             </div>
 
-            {/* Horizontal Scroll Mode & Category Filters */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 select-none shrink-0 -mx-space-4 px-space-4 md:mx-0 md:px-0">
-              {/* Mode Filters */}
+            {/* Filters Dropdown */}
+            <div className="relative inline-block text-left select-none py-1">
               <button
-                onClick={() => setMode('latest')}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFilters(!showFilters);
+                }}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-small font-medium transition-all shrink-0 border border-border/80',
-                  mode === 'latest'
-                    ? 'bg-brand text-brand-foreground border-brand font-semibold shadow-sm'
-                    : 'bg-surface text-muted-foreground hover:text-foreground',
+                  'flex items-center gap-2 rounded-full border border-border/80 px-4 py-2 text-small font-medium bg-surface text-foreground shadow-sm hover:bg-muted/50 active:scale-95 transition-all',
+                  showFilters && 'border-brand ring-2 ring-brand/10',
                 )}
               >
-                <Clock className="h-3.5 w-3.5" />
-                <span>Latest</span>
-              </button>
-              <button
-                onClick={() => setMode('trending')}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-small font-medium transition-all shrink-0 border border-border/80',
-                  mode === 'trending'
-                    ? 'bg-brand text-brand-foreground border-brand font-semibold shadow-sm'
-                    : 'bg-surface text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Flame className="h-3.5 w-3.5" />
-                <span>Trending</span>
-              </button>
-
-              <div className="h-4 w-px bg-divider shrink-0 mx-1" />
-
-              {/* Category Filters */}
-              <button
-                onClick={() => setCategoryId('')}
-                className={cn(
-                  'rounded-full px-4 py-1.5 text-small font-medium transition-all shrink-0 border border-border/80',
-                  categoryId === ''
-                    ? 'bg-brand/10 border-brand/20 text-brand font-semibold'
-                    : 'bg-surface text-muted-foreground hover:text-foreground',
-                )}
-              >
-                All
-              </button>
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setCategoryId(c.id)}
+                <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Filters</span>
+                <span className="text-muted-foreground font-normal">•</span>
+                <span className="text-brand font-semibold">
+                  {mode === 'latest' ? 'Latest' : 'Trending'}
+                </span>
+                <span className="text-muted-foreground font-normal">•</span>
+                <span className="text-brand font-semibold">
+                  {categories.find((c) => c.id === categoryId)?.name ?? 'All'}
+                </span>
+                <ChevronDown
                   className={cn(
-                    'rounded-full px-4 py-1.5 text-small font-medium transition-all shrink-0 border border-border/80',
-                    categoryId === c.id
-                      ? 'bg-brand/10 border-brand/20 text-brand font-semibold'
-                      : 'bg-surface text-muted-foreground hover:text-foreground',
+                    'h-3.5 w-3.5 text-muted-foreground transition-transform duration-200',
+                    showFilters && 'rotate-180',
                   )}
+                />
+              </button>
+
+              {/* Dropdown Menu Overlay */}
+              {showFilters && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 mt-2 w-64 bg-surface border border-border rounded-xl shadow-xl z-50 p-space-4 flex flex-col gap-space-4 animate-in fade-in slide-in-from-top-2 duration-200"
                 >
-                  {c.name}
-                </button>
-              ))}
+                  {/* Sort Mode Section */}
+                  <div className="flex flex-col gap-space-2">
+                    <span className="text-caption font-semibold text-muted-foreground tracking-wider uppercase text-[10px]">
+                      Sort By
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          setMode('latest');
+                          setShowFilters(false);
+                        }}
+                        className={cn(
+                          'rounded-button border px-3 py-1.5 text-small font-medium transition-all text-center',
+                          mode === 'latest'
+                            ? 'bg-brand text-brand-foreground border-brand font-semibold shadow-sm'
+                            : 'bg-background hover:bg-muted/50 border-border text-foreground',
+                        )}
+                      >
+                        Latest
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMode('trending');
+                          setShowFilters(false);
+                        }}
+                        className={cn(
+                          'rounded-button border px-3 py-1.5 text-small font-medium transition-all text-center',
+                          mode === 'trending'
+                            ? 'bg-brand text-brand-foreground border-brand font-semibold shadow-sm'
+                            : 'bg-background hover:bg-muted/50 border-border text-foreground',
+                        )}
+                      >
+                        Trending
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-divider" />
+
+                  {/* Category Selection Section */}
+                  <div className="flex flex-col gap-space-2">
+                    <span className="text-caption font-semibold text-muted-foreground tracking-wider uppercase text-[10px]">
+                      Categories
+                    </span>
+                    <div className="max-h-48 overflow-y-auto flex flex-col gap-1 pr-1 scrollbar-thin">
+                      {/* All option */}
+                      <button
+                        onClick={() => {
+                          setCategoryId('');
+                          setShowFilters(false);
+                        }}
+                        className={cn(
+                          'flex items-center justify-between rounded-button px-3 py-1.5 text-small font-medium text-left transition-all',
+                          categoryId === ''
+                            ? 'bg-brand/10 text-brand font-semibold'
+                            : 'hover:bg-muted/50 text-foreground',
+                        )}
+                      >
+                        <span>All Categories</span>
+                        {categoryId === '' && <Check className="h-3.5 w-3.5 text-brand" />}
+                      </button>
+
+                      {categories.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setCategoryId(c.id);
+                            setShowFilters(false);
+                          }}
+                          className={cn(
+                            'flex items-center justify-between rounded-button px-3 py-1.5 text-small font-medium text-left transition-all',
+                            categoryId === c.id
+                              ? 'bg-brand/10 text-brand font-semibold'
+                              : 'hover:bg-muted/50 text-foreground',
+                          )}
+                        >
+                          <span>{c.name}</span>
+                          {categoryId === c.id && <Check className="h-3.5 w-3.5 text-brand" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Scrollable Feed Container */}
-        <div className="flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-2xl md:max-w-4xl px-space-4 py-space-5 pb-24 md:pb-8 flex flex-col gap-space-4">
-            {posts.length === 0 && !loading && (
-              <p className="py-space-12 text-center text-caption text-muted-foreground">
-                Nothing here yet. Be the first to post.
-              </p>
+        {/* Scrollable Feed — full-width posts with a fixed gap between them */}
+        <div className="flex-1 overflow-y-auto bg-muted/30 pb-24 md:pb-8">
+          <div className="mx-auto flex max-w-xl flex-col gap-space-2 py-space-2">
+            {/* Admin announcements (dismissible, live via socket) */}
+            <AnnouncementBanner />
+
+            {/* First-load skeleton (Instagram/Facebook-style shimmer) */}
+            {loading && posts.length === 0 && <FeedSkeleton count={4} />}
+
+            {!loading && posts.length === 0 && (
+              <div className="bg-background px-space-4 py-space-16 text-center">
+                <p className="text-body font-medium text-foreground">Nothing here yet</p>
+                <p className="mt-space-1 text-caption text-muted-foreground">
+                  Be the first to post on your campus wall.
+                </p>
+              </div>
             )}
+
             {posts.map((post) => (
               <PostCard
                 key={post.id}
@@ -181,15 +267,19 @@ export default function WallPage() {
               />
             ))}
 
-            {mode === 'latest' && cursor && (
-              <Button
-                variant="secondary"
-                disabled={loading}
-                onClick={() => void load(false)}
-                className="w-full mt-space-2 rounded-full py-2.5 active:scale-95 transition-all shadow-sm"
-              >
-                {loading ? 'Loading…' : 'Load more'}
-              </Button>
+            {/* Loading more (skeleton tail) */}
+            {loading && posts.length > 0 && <FeedSkeleton count={2} />}
+
+            {mode === 'latest' && cursor && !loading && (
+              <div className="bg-background p-space-4">
+                <Button
+                  variant="secondary"
+                  onClick={() => void load(false)}
+                  className="w-full rounded-full py-2.5 transition-all active:scale-95"
+                >
+                  Load more
+                </Button>
+              </div>
             )}
           </div>
         </div>

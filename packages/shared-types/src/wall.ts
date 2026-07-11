@@ -56,6 +56,10 @@ export interface PollOption {
 export interface WallPost {
   id: string;
   author: WallAuthor | null;
+  /** Permanent pseudonymous handle shown for the author on the wall (e.g. "SilentFox73"). */
+  authorHandle: string;
+  /** True when the current viewer authored this post. */
+  mine: boolean;
   isAnonymous: boolean;
   postType: WallPostType;
   category: WallCategory | null;
@@ -76,6 +80,10 @@ export interface WallReply {
   id: string;
   postId: string;
   author: WallAuthor | null;
+  /** Permanent pseudonymous handle shown for the author on the wall (e.g. "SilentFox73"). */
+  authorHandle: string;
+  /** True when the current viewer authored this reply. */
+  mine: boolean;
   isAnonymous: boolean;
   body: string;
   reactionCount: number;

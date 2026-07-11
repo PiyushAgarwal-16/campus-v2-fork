@@ -13,6 +13,7 @@ import {
 import { asyncHandler } from './asyncHandler.js';
 import { sendData } from './respond.js';
 import { requireAuth, getAuth } from '../middleware/requireAuth.js';
+import { writeRateLimiter, reportRateLimiter } from '../middleware/rateLimiter.js';
 import { wallService } from '../services/wallService.js';
 
 /**
@@ -72,6 +73,7 @@ wallRouter.get(
 /** POST /wall/posts — create a post (named or anonymous). */
 wallRouter.post(
   '/wall/posts',
+  writeRateLimiter,
   asyncHandler(async (req, res) => {
     const input = CreatePostSchema.parse(req.body);
     const post = await wallService.createPost(getAuth(req), input);
@@ -123,6 +125,7 @@ wallRouter.delete(
 /** POST /wall/posts/:id/replies — reply to a post. */
 wallRouter.post(
   '/wall/posts/:id/replies',
+  writeRateLimiter,
   asyncHandler(async (req, res) => {
     const { id } = IdParam.parse(req.params);
     const input = CreateReplySchema.parse(req.body);
@@ -199,6 +202,7 @@ wallRouter.post(
 /** POST /wall/posts/:id/report — report a post or reply. */
 wallRouter.post(
   '/wall/posts/:id/report',
+  reportRateLimiter,
   asyncHandler(async (req, res) => {
     const input = ReportContentSchema.parse(req.body);
     await wallService.report(

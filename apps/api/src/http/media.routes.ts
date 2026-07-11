@@ -4,6 +4,7 @@ import { UploadUrlRequestSchema, type DownloadUrlResponse } from '@campusly/shar
 import { asyncHandler } from './asyncHandler.js';
 import { sendData } from './respond.js';
 import { requireAuth, getAuth } from '../middleware/requireAuth.js';
+import { uploadRateLimiter } from '../middleware/rateLimiter.js';
 import { mediaService } from '../services/mediaService.js';
 
 /**
@@ -19,6 +20,7 @@ const IdParam = z.object({ id: z.string().uuid() });
 /** POST /media/upload-url — validate and sign a direct upload URL. */
 mediaRouter.post(
   '/media/upload-url',
+  uploadRateLimiter,
   asyncHandler(async (req, res) => {
     const input = UploadUrlRequestSchema.parse(req.body);
     const result = await mediaService.requestUploadUrl(getAuth(req).sub, input);

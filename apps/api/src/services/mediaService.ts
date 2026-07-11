@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { AccessTokenClaims, MediaRef, UploadUrlRequest } from '@campusly/shared-types';
-import { MEDIA_CONSTRAINTS, MEDIA_SERVER_EVENTS } from '@campusly/shared-types';
+import { MEDIA_CONSTRAINTS, MEDIA_SERVER_EVENTS, UPLOADABLE_KINDS } from '@campusly/shared-types';
 import { config } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { ForbiddenError, NotFoundError, ValidationError } from '../domain/errors.js';
@@ -49,6 +49,11 @@ class MediaService {
     media: MediaRef;
     upload: { method: 'PUT'; url: string; headers: Record<string, string> };
   }> {
+    // Security hardening: only images (file uploads) + recorded voice are
+    // permitted. Video/document uploads are rejected outright.
+    if (!UPLOADABLE_KINDS.includes(input.kind)) {
+      throw new ValidationError('This file type cannot be uploaded.');
+    }
     const constraint = MEDIA_CONSTRAINTS[input.kind];
     if (!constraint.allowedMimes.includes(input.mimeType)) {
       throw new ValidationError(`Unsupported file type for ${input.kind}.`);
@@ -66,7 +71,7 @@ class MediaService {
 
     // Chat media is temporary by default; avatars/documents are persistent.
     // If input explicitly overrides isTemporary (e.g. Wall images are persistent), respect it.
-    const isTemporary = input.isTemporary ?? (input.kind !== 'avatar' && input.kind !== 'document');
+    const isTemporary = input.isTemporary ?? input.kind !== 'avatar';
     const storageKey = `${input.kind}/${randomUUID()}`;
 
     const media = await mediaRepository.createPending({

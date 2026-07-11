@@ -49,6 +49,26 @@ function assertCanAuthenticate(user: UserRow): void {
   }
 }
 
+/**
+ * Bootstrap platform admins (hardcoded). Any account signing in with one of
+ * these institutional emails is promoted to `admin` if it isn't already an
+ * admin/super_admin. This seeds initial operators before the in-app role
+ * management exists to grant the first admins.
+ */
+const BOOTSTRAP_ADMIN_EMAILS: ReadonlySet<string> = new Set([
+  '2024cspiyush16750@poornima.edu.in',
+  '2024csdevi18707@poornima.edu.in',
+]);
+
+/** Promotes a bootstrap-admin email to `admin` on sign-in (idempotent). */
+async function ensureBootstrapAdmin(user: UserRow): Promise<UserRow> {
+  if (user.role === 'admin' || user.role === 'super_admin') return user;
+  if (!BOOTSTRAP_ADMIN_EMAILS.has(user.email.toLowerCase())) return user;
+  await userRepository.updateRole(user.id, 'admin');
+  logger.info({ userId: user.id }, 'Promoted bootstrap admin on sign-in');
+  return { ...user, role: 'admin' };
+}
+
 async function issueSession(user: UserRow): Promise<AuthResponse> {
   const accessToken = tokenService.signAccessToken({
     sub: user.id,
@@ -127,6 +147,7 @@ export const authService = {
     }
 
     assertCanAuthenticate(user);
+    user = await ensureBootstrapAdmin(user);
     await loginHistoryRepository.record({
       userId: user.id,
       event: 'login_success',
@@ -176,7 +197,7 @@ export const authService = {
    */
   async loginWithEmail(email: string, password: string, ctx: AuthContext): Promise<AuthResponse> {
     const ipHash = ctx.ip ? sha256(ctx.ip) : null;
-    const user = await userRepository.findByEmail(email.toLowerCase());
+    let user = await userRepository.findByEmail(email.toLowerCase());
 
     if (!user || !user.passwordHash) {
       await loginHistoryRepository.record({
@@ -199,6 +220,7 @@ export const authService = {
     }
 
     assertCanAuthenticate(user);
+    user = await ensureBootstrapAdmin(user);
     await loginHistoryRepository.record({
       userId: user.id,
       event: 'login_success',

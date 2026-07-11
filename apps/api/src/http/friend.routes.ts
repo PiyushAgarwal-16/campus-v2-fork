@@ -4,6 +4,7 @@ import { SendFriendRequestSchema, BlockUserSchema } from '@campusly/shared-types
 import { asyncHandler } from './asyncHandler.js';
 import { sendData } from './respond.js';
 import { requireAuth, getAuth } from '../middleware/requireAuth.js';
+import { friendRequestRateLimiter } from '../middleware/rateLimiter.js';
 import { friendService } from '../services/friendService.js';
 
 /**
@@ -21,6 +22,7 @@ const UserIdParam = z.object({ userId: z.string().uuid() });
 /** POST /friends/requests — send a friend request. */
 friendRouter.post(
   '/friends/requests',
+  friendRequestRateLimiter,
   asyncHandler(async (req, res) => {
     const input = SendFriendRequestSchema.parse(req.body);
     const result = await friendService.sendRequest(getAuth(req).sub, input);

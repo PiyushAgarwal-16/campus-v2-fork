@@ -9,6 +9,7 @@ import { asyncHandler } from './asyncHandler.js';
 import { sendData } from './respond.js';
 import { authService, type AuthContext } from '../services/authService.js';
 import { requireAuth, getAuth } from '../middleware/requireAuth.js';
+import { authRateLimiter } from '../middleware/rateLimiter.js';
 import { ValidationError } from '../domain/errors.js';
 import type { Request } from 'express';
 
@@ -25,6 +26,7 @@ function context(req: Request): AuthContext {
 /** POST /auth/google — exchange a Google credential for a session. */
 authRouter.post(
   '/auth/google',
+  authRateLimiter,
   asyncHandler(async (req, res) => {
     const { credential } = GoogleLoginSchema.parse(req.body);
     const result = await authService.loginWithGoogle(credential, context(req));
@@ -35,6 +37,7 @@ authRouter.post(
 /** POST /auth/email — sign in with email + password. */
 authRouter.post(
   '/auth/email',
+  authRateLimiter,
   asyncHandler(async (req, res) => {
     const { email, password } = EmailLoginSchema.parse(req.body);
     const result = await authService.loginWithEmail(email, password, context(req));
@@ -45,6 +48,7 @@ authRouter.post(
 /** POST /auth/check-username — real-time username availability check. */
 authRouter.post(
   '/auth/check-username',
+  authRateLimiter,
   asyncHandler(async (req, res) => {
     const { username } = CheckUsernameSchema.parse(req.body);
     const result = await authService.checkUsernameAvailability(username);
@@ -55,6 +59,7 @@ authRouter.post(
 /** POST /auth/refresh — rotate the refresh token, issue a new access token. */
 authRouter.post(
   '/auth/refresh',
+  authRateLimiter,
   asyncHandler(async (req, res) => {
     const { refreshToken } = RefreshSchema.parse(req.body);
     if (!refreshToken) {

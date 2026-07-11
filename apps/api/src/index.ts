@@ -13,6 +13,7 @@ import {
 } from './services/wallService.js';
 import { wallRepository } from './repositories/wallRepository.js';
 import { adminService, DEFAULT_FEATURE_FLAGS } from './services/adminService.js';
+import { subscriptionService } from './services/subscriptionService.js';
 import { adminRepository } from './repositories/adminRepository.js';
 
 /**
@@ -41,6 +42,8 @@ async function main(): Promise<void> {
   // Seed feature flags (ADMIN_PANEL.md §10) and start the expired-ban sweeper (§5).
   await adminRepository.ensureFlags(DEFAULT_FEATURE_FLAGS);
   adminService.startBanSweeper();
+  // Auto-expire lapsed subscriptions and downgrade the cache (ADMIN_PANEL.md §8).
+  subscriptionService.startExpirySweep();
 
   httpServer.listen(config.PORT, () => {
     logger.info({ port: config.PORT, env: config.NODE_ENV }, 'AnonymousU API listening');
@@ -75,6 +78,7 @@ async function main(): Promise<void> {
       //    against a closing pool.
       mediaService.stopCleanup();
       adminService.stopBanSweeper();
+      subscriptionService.stopExpirySweep();
       matchingService.stopSweeper();
       stopTrendingJob();
 

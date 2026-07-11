@@ -12,9 +12,10 @@ import { cn } from '../lib/utils';
 
 /**
  * Reusable conversation UI (UI_GUIDELINES.md §12): message list + composer.
- * Drives anonymous sessions and friend chats. Supports text plus media (images
- * and voice messages) — bytes upload directly to storage, only references flow
- * over the socket (MEDIA_SYSTEM.md §3, §6).
+ * Drives anonymous sessions and friend chats. Supports text plus media: image
+ * attachments (file uploads are restricted to images) and recorded voice
+ * messages. Bytes upload directly to storage, only references flow over the
+ * socket (MEDIA_SYSTEM.md §3, §6).
  */
 export function Chat({
   contextType,

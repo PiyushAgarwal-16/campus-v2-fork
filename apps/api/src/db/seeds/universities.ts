@@ -31,4 +31,11 @@ export const UNIVERSITY_SEED: UniversitySeed[] = [
     city: 'Jaipur',
     state: 'Rajasthan',
   },
+  {
+    name: 'JECRC University',
+    shortName: 'JECRC',
+    emailDomains: ['jecrc.edu.in'],
+    city: 'Jaipur',
+    state: 'Rajasthan',
+  },
 ];

@@ -3,22 +3,25 @@ import { sql } from 'drizzle-orm';
 import postgres from 'postgres';
 import { config } from '../config/env.js';
 import { logger } from '../config/logger.js';
-import { universities } from './schema.js';
+import { subscriptionPlans, universities } from './schema.js';
+import { SUBSCRIPTION_PLAN_SEED } from './seeds/subscriptionPlans.js';
 import { UNIVERSITY_SEED } from './seeds/universities.js';
 
 /**
- * Standalone reference-data seed runner (DATABASE_SCHEMA.md §5.1).
+ * Standalone reference-data seed runner (DATABASE_SCHEMA.md §5.1, §17.1).
  *
  * Populates the `universities` table (recognized campuses) required for Google
- * sign-in eligibility. Like the migration runner, this is an EXPLICIT deploy
- * step — run AFTER migrations, never during application boot — and depends only
- * on production packages (`drizzle-orm` + `postgres`), so it runs under a pruned
- * `npm ci --omit=dev` install. It opens its own single-use connection, separate
- * from the app pool in `client.ts`, and closes it when done.
+ * sign-in eligibility and the `subscription_plans` catalog (base free/premium
+ * plans) required as targets for Admin Control Center grant flows. Like the
+ * migration runner, this is an EXPLICIT deploy step — run AFTER migrations,
+ * never during application boot — and depends only on production packages
+ * (`drizzle-orm` + `postgres`), so it runs under a pruned `npm ci --omit=dev`
+ * install. It opens its own single-use connection, separate from the app pool
+ * in `client.ts`, and closes it when done.
  *
- * Idempotent: upserts by the unique `name` constraint, so re-running inserts new
- * campuses and refreshes the domains/metadata of existing ones without creating
- * duplicates.
+ * Idempotent: universities upsert by the unique `name` constraint and plans
+ * upsert by the unique `code` constraint, so re-running inserts new rows and
+ * refreshes the metadata of existing ones without creating duplicates.
  */
 async function main(): Promise<void> {
   const seedClient = postgres(config.DATABASE_URL, { max: 1 });
@@ -52,6 +55,31 @@ async function main(): Promise<void> {
       logger.info({ name: u.name, emailDomains }, 'Seeded university');
     }
     logger.info({ count: UNIVERSITY_SEED.length }, 'University seed complete');
+
+    for (const plan of SUBSCRIPTION_PLAN_SEED) {
+      await db
+        .insert(subscriptionPlans)
+        .values({
+          code: plan.code,
+          name: plan.name,
+          priceCents: plan.priceCents,
+          currency: plan.currency,
+          interval: plan.interval,
+          isActive: plan.isActive,
+        })
+        .onConflictDoUpdate({
+          target: subscriptionPlans.code,
+          set: {
+            name: plan.name,
+            priceCents: plan.priceCents,
+            currency: plan.currency,
+            interval: plan.interval,
+            isActive: plan.isActive,
+          },
+        });
+      logger.info({ code: plan.code, priceCents: plan.priceCents }, 'Seeded subscription plan');
+    }
+    logger.info({ count: SUBSCRIPTION_PLAN_SEED.length }, 'Subscription plan seed complete');
   } finally {
     await seedClient.end({ timeout: 5 });
   }
@@ -60,6 +88,6 @@ async function main(): Promise<void> {
 main()
   .then(() => process.exit(0))
   .catch((err) => {
-    logger.error({ err }, 'University seed failed');
+    logger.error({ err }, 'Reference-data seed failed');
     process.exit(1);
   });

@@ -138,6 +138,13 @@ export const users = pgTable(
     name: text('name').notNull(),
     /** Instagram-style unique username; null for legacy Google-only users. */
     username: text('username'),
+    /**
+     * Permanent, unique, auto-assigned Reddit-style pseudonymous handle shown on
+     * all Campus Wall content (accountable anonymity §7). Nullable: assigned
+     * lazily on first wall activity. Postgres permits multiple NULLs under the
+     * unique constraint.
+     */
+    anonHandle: text('anon_handle').unique('uq_users_anon_handle'),
     /** Scrypt hash of the user's password; null for Google-only users. */
     passwordHash: text('password_hash'),
     year: smallint('year'),
@@ -1264,3 +1271,153 @@ export type ModerationAppealRow = typeof moderationAppeals.$inferSelect;
 export type AuditLogRow = typeof auditLogs.$inferSelect;
 export type FeatureFlagRow = typeof featureFlags.$inferSelect;
 export type AnnouncementRow = typeof announcements.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Notifications module (DATABASE_SCHEMA.md §16.1) — in-app notifications.
+// Domain events persist a notification and push it live over the socket.
+// ---------------------------------------------------------------------------
+
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'friend_request',
+  'friend_accepted',
+  'match',
+  'message',
+  'wall_reply',
+  'wall_reaction',
+  'community',
+  'announcement',
+  'moderation',
+  'system',
+]);
+
+/** notifications (§16.1) — a user-facing in-app notification. */
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: notificationTypeEnum('type').notNull(),
+    title: text('title').notNull(),
+    body: text('body'),
+    data: jsonb('data'),
+    isRead: boolean('is_read').notNull().default(false),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userCreatedIdx: index('idx_notifications_user_created').on(t.userId, t.createdAt),
+    unreadIdx: index('idx_notifications_unread')
+      .on(t.userId)
+      .where(sql`is_read = false`),
+  }),
+);
+
+export type NotificationRow = typeof notifications.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Subscription module (DATABASE_SCHEMA.md §17) — Admin Control Center
+// New authoritative subscription tables. The existing subscriptionStatusEnum
+// (free/premium) on users is retained as the denormalized cache, kept in sync
+// with these tables by subscriptionService (Admin Control Center design).
+// ---------------------------------------------------------------------------
+
+export const subscriptionIntervalEnum = pgEnum('subscription_interval', [
+  'none',
+  'monthly',
+  'yearly',
+]);
+
+export const userSubscriptionStatusEnum = pgEnum('user_subscription_status', [
+  'active',
+  'cancelled',
+  'expired',
+  'granted',
+]);
+
+export const subscriptionSourceEnum = pgEnum('subscription_source', [
+  'purchase',
+  'admin_grant',
+  'trial',
+]);
+
+export const subscriptionTxnTypeEnum = pgEnum('subscription_txn_type', ['payment', 'refund']);
+
+export const subscriptionTxnStatusEnum = pgEnum('subscription_txn_status', [
+  'pending',
+  'succeeded',
+  'failed',
+]);
+
+/** subscription_plans (§17.1) — catalog of purchasable/grantable plans. */
+export const subscriptionPlans = pgTable(
+  'subscription_plans',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    priceCents: integer('price_cents').notNull().default(0),
+    currency: text('currency').notNull().default('INR'),
+    interval: subscriptionIntervalEnum('interval').notNull(),
+    features: jsonb('features').notNull().default({}),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    codeUnique: unique('uq_subscription_plans_code').on(t.code),
+  }),
+);
+
+/** user_subscriptions (§17.2) — a user's authoritative subscription state. */
+export const userSubscriptions = pgTable(
+  'user_subscriptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    planId: uuid('plan_id')
+      .notNull()
+      .references(() => subscriptionPlans.id),
+    status: userSubscriptionStatusEnum('status').notNull(),
+    source: subscriptionSourceEnum('source').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Partial index for entitlement checks: at most one live sub per user is expected.
+    activeIdx: index('idx_user_subscriptions_active')
+      .on(t.userId)
+      .where(sql`status in ('active','granted')`),
+    periodEndIdx: index('idx_user_subscriptions_period_end').on(t.currentPeriodEnd),
+  }),
+);
+
+/** subscription_transactions (§17.3) — billing events for a subscription. */
+export const subscriptionTransactions = pgTable(
+  'subscription_transactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    subscriptionId: uuid('subscription_id')
+      .notNull()
+      .references(() => userSubscriptions.id, { onDelete: 'cascade' }),
+    amountCents: integer('amount_cents').notNull(),
+    currency: text('currency').notNull().default('INR'),
+    type: subscriptionTxnTypeEnum('type').notNull(),
+    status: subscriptionTxnStatusEnum('status').notNull(),
+    provider: text('provider'),
+    providerRef: text('provider_ref'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    providerRefUnique: unique('uq_subscription_txn_provider_ref').on(t.provider, t.providerRef),
+    subscriptionIdx: index('idx_subscription_txn_subscription').on(t.subscriptionId),
+  }),
+);
+
+export type SubscriptionPlanRow = typeof subscriptionPlans.$inferSelect;
+export type UserSubscriptionRow = typeof userSubscriptions.$inferSelect;
+export type SubscriptionTransactionRow = typeof subscriptionTransactions.$inferSelect;

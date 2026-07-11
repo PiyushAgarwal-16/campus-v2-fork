@@ -20,7 +20,6 @@ export function Composer({
   onClose?: () => void;
 }) {
   const [body, setBody] = useState('');
-  const [anonymous, setAnonymous] = useState(false);
   const [categoryId, setCategoryId] = useState('');
   const [poll, setPoll] = useState(false);
   const [options, setOptions] = useState<string[]>(['', '']);
@@ -68,7 +67,8 @@ export function Composer({
       const input: CreatePostInput = {
         postType: poll ? 'poll' : 'text',
         body: body.trim() || undefined,
-        isAnonymous: anonymous,
+        // Everything posts anonymously now; the server enforces this regardless.
+        isAnonymous: true,
         categoryId: categoryId || undefined,
         mediaIds: mediaId ? [mediaId] : undefined,
         pollOptions: poll ? options.map((o) => o.trim()).filter(Boolean) : undefined,
@@ -76,7 +76,6 @@ export function Composer({
       const post = await wallApi.createPost(input);
       onCreated(post);
       setBody('');
-      setAnonymous(false);
       setCategoryId('');
       setPoll(false);
       setOptions(['', '']);
@@ -244,16 +243,6 @@ export function Composer({
 
             <div className="flex flex-wrap items-center justify-between gap-space-2">
               <div className="flex flex-wrap items-center gap-space-2">
-                <label className="flex cursor-pointer items-center gap-space-2 text-small font-medium text-foreground bg-surface/50 px-space-3 h-10 rounded-button hover:bg-muted transition-colors border border-border">
-                  <input
-                    type="checkbox"
-                    checked={anonymous}
-                    onChange={(e) => setAnonymous(e.target.checked)}
-                    className="rounded border-muted-foreground/30 text-brand focus:ring-brand h-4 w-4"
-                  />
-                  Anonymous
-                </label>
-
                 <Button
                   type="button"
                   variant={poll ? 'secondary' : 'ghost'}

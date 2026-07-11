@@ -13,6 +13,7 @@ import {
 import { asyncHandler } from './asyncHandler.js';
 import { sendData } from './respond.js';
 import { requireAuth, getAuth } from '../middleware/requireAuth.js';
+import { writeRateLimiter, reportRateLimiter } from '../middleware/rateLimiter.js';
 import { communityService } from '../services/communityService.js';
 
 /**
@@ -39,6 +40,7 @@ communityRouter.get(
 /** POST /communities — create a community/club. */
 communityRouter.post(
   '/communities',
+  writeRateLimiter,
   asyncHandler(async (req, res) => {
     const input = CreateCommunitySchema.parse(req.body);
     const community = await communityService.create(getAuth(req), input);
@@ -101,6 +103,7 @@ communityRouter.delete(
 );
 communityRouter.post(
   '/communities/posts/:postId/report',
+  reportRateLimiter,
   asyncHandler(async (req, res) => {
     const { postId } = PostIdParam.parse(req.params);
     const { reason, details } = ReportContentSchema.pick({ reason: true, details: true }).parse(
@@ -151,6 +154,7 @@ communityRouter.get(
 );
 communityRouter.post(
   '/communities/:id/posts',
+  writeRateLimiter,
   asyncHandler(async (req, res) => {
     const { id } = IdParam.parse(req.params);
     const input = CreateCommunityPostSchema.parse(req.body);

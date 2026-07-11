@@ -23,7 +23,7 @@ export interface MediaConstraint {
   maxDurationMs?: number;
 }
 
-const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+export const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export const MEDIA_CONSTRAINTS: Record<MediaKind, MediaConstraint> = {
   avatar: { allowedMimes: IMAGE_MIMES, maxBytes: 8 * 1024 * 1024 },
@@ -41,6 +41,25 @@ export const MEDIA_CONSTRAINTS: Record<MediaKind, MediaConstraint> = {
   document: { allowedMimes: ['application/pdf'], maxBytes: 16 * 1024 * 1024 },
 };
 
+/**
+ * Kinds a user may upload right now (security hardening). File uploads are
+ * restricted to images (regular images + avatars); `voice` is permitted only
+ * for in-browser recorded audio. Video and document uploads are DISABLED
+ * platform-wide (wall AND chat) so arbitrary/dangerous files can never be
+ * accepted — the byte-write path additionally validates real content.
+ */
+export const UPLOADABLE_KINDS: MediaKind[] = ['image', 'avatar', 'voice'];
+
+/**
+ * Absolute body-size ceiling for an upload, in bytes — the largest cap among
+ * the currently-uploadable kinds. Enforced at sign time AND at the byte-write
+ * path so no oversized file can reach disk/storage. Per-kind caps
+ * (`MEDIA_CONSTRAINTS`) are still enforced individually.
+ */
+export const MAX_UPLOAD_BYTES = Math.max(
+  ...UPLOADABLE_KINDS.map((k) => MEDIA_CONSTRAINTS[k].maxBytes),
+);
+
 /** A media reference as returned to clients (never bytes). */
 export interface MediaRef {
   id: string;
@@ -56,9 +75,11 @@ export interface MediaRef {
 
 /** POST /media/upload-url — request a signed upload URL (validated). */
 export const UploadUrlRequestSchema = z.object({
-  kind: z.enum(MEDIA_KINDS),
+  // Uploadable kinds only (image/avatar file uploads + recorded voice). The
+  // per-kind mime allowlist is enforced server-side against the real bytes.
+  kind: z.enum(['image', 'avatar', 'voice']),
   mimeType: z.string().min(1).max(128),
-  sizeBytes: z.number().int().positive(),
+  sizeBytes: z.number().int().positive().max(MAX_UPLOAD_BYTES),
   durationMs: z.number().int().positive().optional(),
   isTemporary: z.boolean().optional(),
 });

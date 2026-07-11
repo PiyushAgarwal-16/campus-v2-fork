@@ -14,6 +14,7 @@ import { userRepository } from '../repositories/userRepository.js';
 import { profileRepository } from '../repositories/profileRepository.js';
 import { matchingRepository } from '../repositories/matchingRepository.js';
 import { notifier } from '../realtime/notifier.js';
+import { notificationService } from './notificationService.js';
 import { logger } from '../config/logger.js';
 
 /**
@@ -106,6 +107,8 @@ export const friendService = {
       origin,
       fromUser,
     });
+    // Persistent in-app notification (anonymous name for session origin).
+    void notificationService.friendRequest(receiverId, fromUser?.name ?? null);
 
     return { requestId: request.id, status: 'pending' };
   },
@@ -185,6 +188,9 @@ export const friendService = {
         user: toSummary(accepter),
       });
     }
+
+    // Tell the original requester their request was accepted (persistent).
+    void notificationService.friendAccepted(otherId, accepter?.name ?? 'Someone', friendship.id);
 
     // Record the conversion for the match→friend metric (best-effort).
     void matchingRepository

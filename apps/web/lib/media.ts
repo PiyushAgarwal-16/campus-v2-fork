@@ -1,9 +1,4 @@
-import type {
-  MediaKind,
-  MediaRef,
-  UploadUrlResponse,
-  DownloadUrlResponse,
-} from '@campusly/shared-types';
+import type { MediaRef, UploadUrlResponse, DownloadUrlResponse } from '@campusly/shared-types';
 import { apiFetch } from './apiClient';
 
 /**
@@ -14,7 +9,9 @@ import { apiFetch } from './apiClient';
 export const mediaApi = {
   async upload(
     file: Blob,
-    kind: MediaKind,
+    // File uploads are restricted to images; 'voice' is only for in-browser
+    // recorded audio (not a user-selected file). Video/document are not allowed.
+    kind: 'image' | 'avatar' | 'voice',
     options?: { durationMs?: number; isTemporary?: boolean },
   ): Promise<MediaRef> {
     const mimeType = file.type || 'application/octet-stream';

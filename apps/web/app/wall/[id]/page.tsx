@@ -7,6 +7,7 @@ import { useRequireAuth } from '../../../hooks/useRequireAuth';
 import { wallApi } from '../../../lib/wall';
 import { AppNav } from '../../../components/AppNav';
 import { PostCard } from '../../../components/wall/PostCard';
+import { Avatar } from '../../../components/Avatar';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Textarea } from '../../../components/ui/Textarea';
@@ -22,7 +23,6 @@ export default function PostDetailPage() {
   const [replies, setReplies] = useState<WallReply[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [draft, setDraft] = useState('');
-  const [anonymous, setAnonymous] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -42,10 +42,9 @@ export default function PostDetailPage() {
     if (!draft.trim()) return;
     setBusy(true);
     try {
-      const reply = await wallApi.reply(postId, { body: draft.trim(), isAnonymous: anonymous });
+      const reply = await wallApi.reply(postId, { body: draft.trim(), isAnonymous: true });
       setReplies((prev) => [...prev, reply]);
       setDraft('');
-      setAnonymous(false);
     } finally {
       setBusy(false);
     }
@@ -80,14 +79,6 @@ export default function PostDetailPage() {
             maxLength={2000}
           />
           <div className="flex items-center gap-space-3">
-            <label className="flex cursor-pointer items-center gap-space-1 text-small text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={anonymous}
-                onChange={(e) => setAnonymous(e.target.checked)}
-              />
-              Anonymous
-            </label>
             <Button
               className="ml-auto"
               size="sm"
@@ -104,9 +95,10 @@ export default function PostDetailPage() {
         {replies.map((r) => (
           <Card key={r.id} className="flex flex-col gap-space-1">
             <div className="flex items-center justify-between">
-              <span className="text-small font-medium text-foreground">
-                {r.isAnonymous ? 'Anonymous' : (r.author?.name ?? 'Student')}
-              </span>
+              <div className="flex items-center gap-space-2">
+                <Avatar name={r.authorHandle} mediaId={null} size="sm" />
+                <span className="text-small font-medium text-foreground">{r.authorHandle}</span>
+              </div>
               <time className="text-small text-muted-foreground">
                 {new Date(r.createdAt).toLocaleDateString()}
               </time>

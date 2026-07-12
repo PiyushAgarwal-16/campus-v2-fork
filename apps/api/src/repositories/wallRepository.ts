@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import type { ReactionType, WallPostType } from '@campusly/shared-types';
 import { db } from '../db/client.js';
 import {

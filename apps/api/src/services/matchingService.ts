@@ -4,7 +4,6 @@ import { logger } from '../config/logger.js';
 import { matchingRepository } from '../repositories/matchingRepository.js';
 import { friendRepository } from '../repositories/friendRepository.js';
 import { profileRepository } from '../repositories/profileRepository.js';
-import { userRepository } from '../repositories/userRepository.js';
 import { reportRepository } from '../repositories/reportRepository.js';
 import { dataInspectorRepository } from '../repositories/dataInspectorRepository.js';
 
@@ -149,7 +148,7 @@ class MatchingService {
 
   private async pickPartner(
     userId: string,
-    universityId: string,
+    _universityId: string,
     userGender: string,
     genderPreference: string,
   ): Promise<string | null> {

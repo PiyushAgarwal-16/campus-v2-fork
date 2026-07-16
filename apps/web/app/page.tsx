@@ -223,7 +223,7 @@ export default function LandingPage() {
                 <div className="w-full max-w-md overflow-hidden">
                   <div
                     className={cn(
-                      'grid w-[300%] grid-cols-3 items-center transition-transform duration-700 ease-out',
+                      'grid w-[300%] grid-cols-3 items-start transition-transform duration-700 ease-out',
                     )}
                     style={{ transform: `translateX(-${panelIndex * (100 / 3)}%)` }}
                   >
@@ -427,11 +427,7 @@ export default function LandingPage() {
                               Sign Up
                             </button>
                           </p>
-                          <button
-                            type="button"
-                            onClick={backToHero}
-                            className="text-small font-medium text-muted-foreground transition-colors hover:text-foreground"
-                          >
+                          <button className="text-small font-medium text-muted-foreground transition-colors hover:text-foreground">
                             Back to welcome
                           </button>
                         </div>
@@ -446,88 +442,73 @@ export default function LandingPage() {
               {/* Right Column: 3D Isometric Screen Showcase */}
               <div
                 className={cn(
-                  'items-center justify-center relative min-h-[500px] lg:min-h-[550px] w-full lg:w-1/2 isometric-perspective mt-space-12 lg:mt-0 transition-opacity duration-500',
+                  'items-center justify-center relative min-h-[500px] lg:min-h-[550px] w-full lg:w-1/2 iphone-perspective mt-space-12 lg:mt-0 transition-opacity duration-500',
                   panelIndex === 0 ? 'flex' : 'hidden lg:flex',
                 )}
               >
                 {/* background decorative glowing blobs */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] rounded-full bg-brand/10 blur-[80px]" />
 
-                {/* 3D Stack */}
-                <div className="relative w-[300px] h-[450px] preserve-3d">
-                  {/* CARD 3: Match Page (Bottom-most layer) */}
-                  <div className="absolute inset-0 bg-surface border border-border/80 shadow-[10px_20px_50px_rgba(0,0,0,0.15)] rounded-[24px] overflow-hidden isometric-card isometric-float-3 translate-x-[-40px] translate-y-[40px] z-10 flex flex-col p-5">
-                    {/* Mockup matching content */}
-                    <div className="flex justify-between items-center pb-2 border-b border-border/40">
-                      <span className="text-caption font-semibold text-brand">Random Match</span>
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                      <div className="h-16 w-16 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center text-brand font-display text-h3 font-bold">
-                        U
-                      </div>
-                      <p className="text-small font-medium text-foreground">Matched with Senior</p>
-                      <div className="flex gap-2 mt-2 w-full">
-                        <div className="flex-1 h-8 rounded-lg bg-brand text-brand-foreground text-caption font-bold flex items-center justify-center">
-                          Chat Now
-                        </div>
-                        <div className="h-8 w-8 rounded-lg border border-border/60 flex items-center justify-center text-muted-foreground">
-                          +
-                        </div>
+                {/* Realistic 3D iPhone Mockup */}
+                <div className="relative w-[300px] h-[600px] preserve-3d iphone-mockup z-10">
+                  {/* Outer Hardware Bezel */}
+                  <div className="absolute inset-0 rounded-[3rem] border-[10px] border-[#1a1a1c] bg-[#000000] shadow-[15px_25px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
+                    {/* Dynamic Island / Notch */}
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[100px] h-7 bg-black rounded-full z-50 flex items-center justify-between px-2.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-white/5" />
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#0a0a2a] border border-blue-900/30 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[1px]" />
                       </div>
                     </div>
-                  </div>
 
-                  {/* CARD 2: Campus Wall (Middle layer) */}
-                  <div className="absolute inset-0 bg-surface border border-border/80 shadow-[15px_25px_60px_rgba(0,0,0,0.2)] rounded-[24px] overflow-hidden isometric-card isometric-float-2 z-20 flex flex-col p-5">
-                    <div className="flex justify-between items-center pb-2 border-b border-border/40">
-                      <span className="text-caption font-semibold text-foreground">
-                        Campus Wall
-                      </span>
-                      <span className="text-caption text-muted-foreground text-small">
-                        IIT Delhi
-                      </span>
-                    </div>
-                    <div className="flex-1 flex flex-col gap-3 py-3 overflow-hidden">
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-muted/40 border border-border/40">
-                        <span className="text-small font-semibold text-brand">Anonymous User</span>
-                        <p className="text-caption text-foreground/90 leading-tight">
-                          Does anyone have the notes for the DSA midsem exam next week? 🥺
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-muted/40 border border-border/40">
-                        <span className="text-small font-semibold text-foreground/80">
-                          Anonymous Senior
+                    {/* Screen Content - App View */}
+                    <div className="relative flex-1 bg-surface w-full h-full flex flex-col overflow-hidden pt-8">
+                      {/* Header bar inside app */}
+                      <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/80 backdrop-blur-sm z-20">
+                        <span className="text-small font-semibold text-foreground">
+                          Anonymous Chat
                         </span>
-                        <p className="text-caption text-foreground/90 leading-tight">
-                          Check the library drive, folder 'CS-201'. Added yesterday!
-                        </p>
+                        <div className="h-6 w-6 rounded-full bg-brand flex items-center justify-center text-[10px] font-bold text-brand-foreground">
+                          AU
+                        </div>
                       </div>
+
+                      {/* Chat Messages */}
+                      <div className="flex-1 flex flex-col gap-3 p-5 overflow-y-auto">
+                        <div className="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-sm bg-muted text-caption text-foreground">
+                          Hey! Are you studying at the library right now?
+                        </div>
+                        <div className="self-end max-w-[85%] p-3 rounded-2xl rounded-tr-sm bg-brand text-caption text-brand-foreground">
+                          Yeah, on the 3rd floor. Want to study together?
+                        </div>
+                        <div className="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-sm bg-muted text-caption text-foreground">
+                          Sure! I'll be there in 5 mins. Bring notes! 📚
+                        </div>
+                        <div className="self-end max-w-[85%] p-3 rounded-2xl rounded-tr-sm bg-brand text-caption text-brand-foreground shadow-sm">
+                          Got em right here. See ya soon!
+                        </div>
+                      </div>
+
+                      {/* Input Bar */}
+                      <div className="p-4 border-t border-border/40 bg-surface flex gap-2">
+                        <div className="flex-1 h-9 rounded-full bg-muted/60 border border-border/40 px-3 flex items-center text-muted-foreground text-caption">
+                          Message...
+                        </div>
+                        <div className="h-9 w-9 rounded-full bg-brand flex items-center justify-center text-brand-foreground shadow-sm">
+                          ↑
+                        </div>
+                      </div>
+
+                      {/* Home Indicator */}
+                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-foreground/20 rounded-full" />
                     </div>
                   </div>
 
-                  {/* CARD 1: Chat Message View (Top-most layer) */}
-                  <div className="absolute inset-0 bg-surface border border-border/85 shadow-[20px_30px_70px_rgba(0,0,0,0.25)] rounded-[24px] overflow-hidden isometric-card isometric-float-1 translate-x-[40px] translate-y-[-40px] z-30 flex flex-col p-5">
-                    <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                      <div className="h-6 w-6 rounded-full bg-brand flex items-center justify-center text-[10px] font-bold text-brand-foreground">
-                        AU
-                      </div>
-                      <span className="text-caption font-semibold text-foreground">
-                        Anonymous Chat
-                      </span>
-                    </div>
-                    <div className="flex-1 flex flex-col gap-2 py-3">
-                      <div className="self-start max-w-[85%] p-2.5 rounded-lg bg-muted text-caption text-foreground">
-                        Hey! Are you studying at the library right now?
-                      </div>
-                      <div className="self-end max-w-[85%] p-2.5 rounded-lg bg-brand text-caption text-brand-foreground">
-                        Yeah, on the 3rd floor. Want to study together?
-                      </div>
-                      <div className="self-start max-w-[85%] p-2.5 rounded-lg bg-muted text-caption text-foreground">
-                        Sure! I'll be there in 5 mins.
-                      </div>
-                    </div>
-                  </div>
+                  {/* Hardware Buttons */}
+                  <div className="absolute top-28 -left-[13px] w-[3px] h-8 bg-[#2a2a2c] rounded-l-md" />
+                  <div className="absolute top-44 -left-[13px] w-[3px] h-12 bg-[#2a2a2c] rounded-l-md" />
+                  <div className="absolute top-60 -left-[13px] w-[3px] h-12 bg-[#2a2a2c] rounded-l-md" />
+                  <div className="absolute top-44 -right-[13px] w-[3px] h-16 bg-[#2a2a2c] rounded-r-md" />
                 </div>
               </div>
               {/* Close Bottom Section container */}

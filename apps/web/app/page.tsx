@@ -517,52 +517,98 @@ export default function LandingPage() {
                             Campus Wall
                           </span>
                         </div>
-                        <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar pb-10">
-                          {/* IG-Style Post */}
-                          <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
-                            {/* Post Header */}
-                            <div className="flex items-center gap-3 p-3">
-                              <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center border border-brand/30">
-                                <span className="text-[10px] font-bold text-brand">AS</span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-small font-semibold text-foreground leading-tight">
-                                  Anonymous Senior
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  CS Department • 2h ago
-                                </span>
-                              </div>
-                            </div>
+                        <div className="flex-1 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-full flex flex-col animate-feed-scroll hover:[animation-play-state:paused]">
+                            {[0, 1].map((key) => (
+                              <div key={key} className="flex flex-col">
+                                {/* Post 1 */}
+                                <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
+                                  {/* Post Header */}
+                                  <div className="flex items-center gap-3 p-3">
+                                    <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center border border-brand/30">
+                                      <span className="text-[10px] font-bold text-brand">AS</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-small font-semibold text-foreground leading-tight">
+                                        Anonymous Senior
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        CS Department • 2h ago
+                                      </span>
+                                    </div>
+                                  </div>
 
-                            {/* Post Media (Placeholder Image) */}
-                            <div className="w-full aspect-square bg-muted relative overflow-hidden group">
-                              <div className="absolute inset-0 bg-gradient-to-tr from-brand/20 to-blue-500/10" />
-                              <img
-                                src="/logo.png"
-                                alt="post media"
-                                className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-screen scale-110 group-hover:scale-100 transition-transform duration-700"
-                              />
-                              {/* Overlay gradient for aesthetics */}
-                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
-                            </div>
+                                  {/* Post Media (Placeholder Image) */}
+                                  <div className="w-full aspect-square bg-muted relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-brand/20 to-blue-500/10" />
+                                    <img
+                                      src="/logo.png"
+                                      alt="post media"
+                                      className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-screen scale-110 group-hover:scale-100 transition-transform duration-700"
+                                    />
+                                    {/* Overlay gradient for aesthetics */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+                                  </div>
 
-                            {/* Post Actions & Caption */}
-                            <div className="flex flex-col px-4 pt-3 gap-2">
-                              <div className="flex gap-4 items-center text-foreground/80">
-                                <span className="text-h2">♡</span>
-                                <span className="text-h3">💬</span>
-                                <span className="text-h3">↗</span>
+                                  {/* Post Actions & Caption */}
+                                  <div className="flex flex-col px-4 pt-3 gap-2">
+                                    <div className="flex gap-4 items-center text-foreground/80">
+                                      <span className="text-h2">♡</span>
+                                      <span className="text-h3">💬</span>
+                                      <span className="text-h3">↗</span>
+                                    </div>
+                                    <p className="text-caption text-foreground/90 mt-1">
+                                      <span className="font-semibold mr-2">Anonymous Senior</span>
+                                      Just uploaded all the notes and study guides for the upcoming
+                                      DSA midterms into the shared drive. Good luck everyone! 📚✨
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-1">
+                                      View all 12 comments
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Post 2 */}
+                                <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
+                                  <div className="flex items-center gap-3 p-3">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                                      <span className="text-[10px] font-bold text-blue-500">
+                                        AJ
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-small font-semibold text-foreground leading-tight">
+                                        Anonymous Junior
+                                      </span>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        Design Dept • 5h ago
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="w-full aspect-square bg-muted relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-brand/10" />
+                                    <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-h3 font-display font-semibold text-foreground/80">
+                                      Anyone going to the design meetup tonight? Looking for a
+                                      squad! 🎨
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col px-4 pt-3 gap-2">
+                                    <div className="flex gap-4 items-center text-foreground/80">
+                                      <span className="text-h2">♡</span>
+                                      <span className="text-h3">💬</span>
+                                      <span className="text-h3">↗</span>
+                                    </div>
+                                    <p className="text-caption text-foreground/90 mt-1">
+                                      <span className="font-semibold mr-2">Anonymous Junior</span>
+                                      Let me know!
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-1">
+                                      View all 4 comments
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-caption text-foreground/90 mt-1">
-                                <span className="font-semibold mr-2">Anonymous Senior</span>
-                                Just uploaded all the notes and study guides for the upcoming DSA
-                                midterms into the shared drive. Good luck everyone! 📚✨
-                              </p>
-                              <p className="text-[10px] text-muted-foreground mt-1">
-                                View all 12 comments
-                              </p>
-                            </div>
+                            ))}
                           </div>
                         </div>
                       </div>

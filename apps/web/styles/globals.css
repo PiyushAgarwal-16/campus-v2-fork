@@ -103,3 +103,15 @@
     transform: rotateY(-18deg) rotateX(10deg) rotateZ(4deg) translateY(-15px);
   }
 }
+
+@keyframes feed-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+.animate-feed-scroll {
+  animation: feed-scroll 20s linear infinite;
+}

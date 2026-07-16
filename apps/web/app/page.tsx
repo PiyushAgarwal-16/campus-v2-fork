@@ -254,7 +254,7 @@ export default function LandingPage() {
             </div>
 
             {/* Bottom Section: Split Content on Desktop */}
-            <div className="flex flex-col lg:flex-row items-center justify-between w-full mt-space-8 gap-space-8">
+            <div className="flex flex-col-reverse lg:flex-row items-center justify-between w-full mt-space-8 gap-space-8">
               {/* Left Column: Forms */}
               <div className="flex flex-col items-center justify-center lg:w-1/2 w-full">
                 <div className="w-full max-w-md overflow-hidden">
@@ -483,7 +483,7 @@ export default function LandingPage() {
               {/* Right Column: 3D Isometric Screen Showcase */}
               <div
                 className={cn(
-                  'items-center justify-center relative min-h-[500px] lg:min-h-[550px] w-full lg:w-1/2 iphone-perspective mt-space-12 lg:mt-0 transition-opacity duration-500',
+                  'items-center justify-center relative min-h-[450px] lg:min-h-[550px] w-full lg:w-1/2 iphone-perspective mt-space-8 lg:mt-0 transition-opacity duration-500 scale-[0.85] lg:scale-100',
                   panelIndex === 0 ? 'flex' : 'hidden lg:flex',
                 )}
               >

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Building2, Eye, Mail, MessageCircle, Users } from 'lucide-react';
+import { Building2, Eye, MessageCircle, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../components/AuthProvider';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';

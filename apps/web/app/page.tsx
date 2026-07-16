@@ -192,7 +192,7 @@ export default function LandingPage() {
           )}
         >
           {/* Top bar */}
-          <header className="flex items-center justify-between px-space-5 py-space-5 md:px-space-12">
+          <header className="flex items-center justify-between px-space-5 pt-space-10 pb-space-4 md:px-space-12 md:pt-space-12">
             <span className="font-display text-h3 font-bold tracking-tight">
               Anonymous<span className="text-brand">U</span>
             </span>

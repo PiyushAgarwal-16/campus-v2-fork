@@ -6,6 +6,7 @@ import { friendRepository } from '../repositories/friendRepository.js';
 import { profileRepository } from '../repositories/profileRepository.js';
 import { reportRepository } from '../repositories/reportRepository.js';
 import { dataInspectorRepository } from '../repositories/dataInspectorRepository.js';
+import { userRepository } from '../repositories/userRepository.js';
 
 /**
  * Anonymous matching engine (MATCHING_ENGINE.md, ARCHITECTURE.md §5).
@@ -122,14 +123,24 @@ class MatchingService {
       const session = await matchingRepository.createSession(universityId, userId, partnerId);
       const payload = { sessionId: session.id };
 
-      const started = { sessionId: session.id, startedAt: session.startedAt.toISOString() };
-      for (const uid of [userId, partnerId]) {
-        this.emit(uid, MATCH_SERVER_EVENTS.MATCH_FOUND, payload);
-        this.emit(uid, MATCH_SERVER_EVENTS.SESSION_STARTED, started);
+      let startedA: any = { sessionId: session.id, startedAt: session.startedAt.toISOString() };
+      let startedB: any = { sessionId: session.id, startedAt: session.startedAt.toISOString() };
+
+      const areFriends = await friendRepository.areFriends(userId, partnerId);
+      if (areFriends) {
+        const summaries = await userRepository.getPublicSummaries([userId, partnerId]);
+        startedA.partner = summaries.get(partnerId);
+        startedB.partner = summaries.get(userId);
       }
+
+      this.emit(userId, MATCH_SERVER_EVENTS.MATCH_FOUND, payload);
+      this.emit(partnerId, MATCH_SERVER_EVENTS.MATCH_FOUND, payload);
+      this.emit(userId, MATCH_SERVER_EVENTS.SESSION_STARTED, startedA);
+      this.emit(partnerId, MATCH_SERVER_EVENTS.SESSION_STARTED, startedB);
+
       logger.info(
-        { sessionId: session.id, userA: userId, userB: partnerId },
-        'Symmetric match found! Anonymous session created.',
+        { sessionId: session.id, userA: userId, userB: partnerId, areFriends },
+        'Symmetric match found! Session created.',
       );
     } catch (err) {
       // Roll back the claim: re-queue the partner so they are not stranded.

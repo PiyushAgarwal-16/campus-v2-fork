@@ -99,16 +99,16 @@ export const userRepository = {
   /** Sets the username and password hash (onboarding credential setup). */
   async setCredentials(
     id: string,
-    credentials: { username: string; passwordHash: string },
+    credentials: { username?: string; passwordHash: string },
   ): Promise<void> {
-    await db
-      .update(users)
-      .set({
-        username: credentials.username.toLowerCase(),
-        passwordHash: credentials.passwordHash,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, id));
+    const updatePayload: any = {
+      passwordHash: credentials.passwordHash,
+      updatedAt: new Date(),
+    };
+    if (credentials.username !== undefined) {
+      updatePayload.username = credentials.username.toLowerCase();
+    }
+    await db.update(users).set(updatePayload).where(eq(users.id, id));
   },
 
   /** Campus-scoped name search of active students (GET /users/search). */

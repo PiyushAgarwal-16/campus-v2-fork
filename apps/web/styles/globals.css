@@ -1,6 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Alex+Brush&family=Playball&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .font-premium-cursive {
+    font-family: 'Great Vibes', 'Alex Brush', 'Playball', cursive !important;
+  }
+}
 
 /**
  * Theme variables (UI_GUIDELINES.md §3–4). Only colors change between themes;

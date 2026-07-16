@@ -80,27 +80,13 @@
   perspective: 1500px;
 }
 
-.iphone-mockup {
-  transform-style: preserve-3d;
-  transform: rotateY(-18deg) rotateX(10deg) rotateZ(4deg);
-  transition:
-    transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.8s ease;
-  animation: iphone-float 6s infinite ease-in-out;
-}
-
-.iphone-mockup:hover {
-  transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1.08);
-  animation-play-state: paused;
-}
-
 @keyframes iphone-float {
   0%,
   100% {
-    transform: rotateY(-18deg) rotateX(10deg) rotateZ(4deg) translateY(0px);
+    transform: translateY(0px);
   }
   50% {
-    transform: rotateY(-18deg) rotateX(10deg) rotateZ(4deg) translateY(-15px);
+    transform: translateY(-15px);
   }
 }
 

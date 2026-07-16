@@ -492,216 +492,219 @@ export default function LandingPage() {
 
                 {/* Realistic 3D iPhone Mockup */}
                 <div
-                  className={cn(
-                    'relative w-[300px] h-[600px] preserve-3d z-10 transition-transform duration-700 ease-out',
-                    !mousePos.active && 'iphone-mockup',
-                  )}
-                  style={
-                    mousePos.active
-                      ? {
-                          transform: `rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg) scale(1.08)`,
-                        }
-                      : undefined
-                  }
+                  className="relative w-[300px] h-[600px] preserve-3d z-10"
+                  style={{ animation: 'iphone-float 6s infinite ease-in-out' }}
                 >
-                  {/* Outer Hardware Bezel */}
-                  <div className="absolute inset-0 rounded-[3rem] border-[10px] border-[#1a1a1c] bg-[#000000] shadow-[15px_25px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
-                    {/* Dynamic Island / Notch */}
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[100px] h-7 bg-black rounded-full z-50 flex items-center justify-between px-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-white/5" />
-                      <div className="w-3.5 h-3.5 rounded-full bg-[#0a0a2a] border border-blue-900/30 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[1px]" />
-                      </div>
-                    </div>
-
-                    {/* Screen Content - App View */}
-                    <div className="relative flex-1 bg-surface w-full h-full flex flex-col overflow-hidden pt-8">
-                      {/* STATE 0: Campus Wall */}
-                      <div
-                        className={cn(
-                          'absolute inset-0 pt-8 flex flex-col transition-opacity duration-1000 bg-background',
-                          mockupScreenIndex === 0 ? 'opacity-100 z-20' : 'opacity-0 z-0',
-                        )}
-                      >
-                        <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/90 backdrop-blur-md z-30">
-                          <span className="text-small font-semibold text-foreground">
-                            Campus Wall
-                          </span>
+                  <div
+                    className="w-full h-full preserve-3d transition-transform duration-1000 ease-out"
+                    style={{
+                      transform: mousePos.active
+                        ? `rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg) scale(1.08)`
+                        : 'rotateY(-18deg) rotateX(10deg) rotateZ(4deg) scale(1)',
+                    }}
+                  >
+                    {/* Outer Hardware Bezel */}
+                    <div className="absolute inset-0 rounded-[3rem] border-[10px] border-[#1a1a1c] bg-[#000000] shadow-[15px_25px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
+                      {/* Dynamic Island / Notch */}
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[100px] h-7 bg-black rounded-full z-50 flex items-center justify-between px-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-white/5" />
+                        <div className="w-3.5 h-3.5 rounded-full bg-[#0a0a2a] border border-blue-900/30 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[1px]" />
                         </div>
-                        <div className="flex-1 relative overflow-hidden">
-                          <div className="absolute top-0 left-0 w-full flex flex-col animate-feed-scroll hover:[animation-play-state:paused]">
-                            {[0, 1].map((key) => (
-                              <div key={key} className="flex flex-col">
-                                {/* Post 1 */}
-                                <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
-                                  {/* Post Header */}
-                                  <div className="flex items-center gap-3 p-3">
-                                    <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center border border-brand/30">
-                                      <span className="text-[10px] font-bold text-brand">AS</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="text-small font-semibold text-foreground leading-tight">
-                                        Anonymous Senior
-                                      </span>
-                                      <span className="text-[10px] text-muted-foreground">
-                                        CS Department • 2h ago
-                                      </span>
-                                    </div>
-                                  </div>
+                      </div>
 
-                                  {/* Post Media (Placeholder Image) */}
-                                  <div className="w-full aspect-square bg-muted relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-brand/20 to-blue-500/10" />
-                                    <Image
-                                      src="/logo.png"
-                                      alt="post media"
-                                      fill
-                                      className="object-cover opacity-80 mix-blend-screen scale-110 group-hover:scale-100 transition-transform duration-700"
-                                    />
-                                    {/* Overlay gradient for aesthetics */}
-                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
-                                  </div>
-
-                                  {/* Post Actions & Caption */}
-                                  <div className="flex flex-col px-4 pt-3 gap-2">
-                                    <div className="flex gap-4 items-center text-foreground/80">
-                                      <span className="text-h2">♡</span>
-                                      <span className="text-h3">💬</span>
-                                      <span className="text-h3">↗</span>
-                                    </div>
-                                    <p className="text-caption text-foreground/90 mt-1">
-                                      <span className="font-semibold mr-2">Anonymous Senior</span>
-                                      Just uploaded all the notes and study guides for the upcoming
-                                      DSA midterms into the shared drive. Good luck everyone! 📚✨
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground mt-1">
-                                      View all 12 comments
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Post 2 */}
-                                <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
-                                  <div className="flex items-center gap-3 p-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                                      <span className="text-[10px] font-bold text-blue-500">
-                                        AJ
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="text-small font-semibold text-foreground leading-tight">
-                                        Anonymous Junior
-                                      </span>
-                                      <span className="text-[10px] text-muted-foreground">
-                                        Design Dept • 5h ago
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="w-full aspect-square bg-muted relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-brand/10" />
-                                    <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-h3 font-display font-semibold text-foreground/80">
-                                      Anyone going to the design meetup tonight? Looking for a
-                                      squad! 🎨
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-col px-4 pt-3 gap-2">
-                                    <div className="flex gap-4 items-center text-foreground/80">
-                                      <span className="text-h2">♡</span>
-                                      <span className="text-h3">💬</span>
-                                      <span className="text-h3">↗</span>
-                                    </div>
-                                    <p className="text-caption text-foreground/90 mt-1">
-                                      <span className="font-semibold mr-2">Anonymous Junior</span>
-                                      Let me know!
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground mt-1">
-                                      View all 4 comments
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                      {/* Screen Content - App View */}
+                      <div className="relative flex-1 bg-surface w-full h-full flex flex-col overflow-hidden pt-8">
+                        {/* STATE 0: Campus Wall */}
+                        <div
+                          className={cn(
+                            'absolute inset-0 pt-8 flex flex-col transition-opacity duration-1000 bg-background',
+                            mockupScreenIndex === 0 ? 'opacity-100 z-20' : 'opacity-0 z-0',
+                          )}
+                        >
+                          <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/90 backdrop-blur-md z-30">
+                            <span className="text-small font-semibold text-foreground">
+                              Campus Wall
+                            </span>
                           </div>
-                        </div>
-                      </div>
+                          <div className="flex-1 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full flex flex-col animate-feed-scroll hover:[animation-play-state:paused]">
+                              {[0, 1].map((key) => (
+                                <div key={key} className="flex flex-col">
+                                  {/* Post 1 */}
+                                  <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
+                                    {/* Post Header */}
+                                    <div className="flex items-center gap-3 p-3">
+                                      <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center border border-brand/30">
+                                        <span className="text-[10px] font-bold text-brand">AS</span>
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-small font-semibold text-foreground leading-tight">
+                                          Anonymous Senior
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                          CS Department • 2h ago
+                                        </span>
+                                      </div>
+                                    </div>
 
-                      {/* STATE 1: Match Radar */}
-                      <div
-                        className={cn(
-                          'absolute inset-0 pt-8 flex flex-col bg-surface transition-opacity duration-1000',
-                          mockupScreenIndex === 1 ? 'opacity-100 z-20' : 'opacity-0 z-0',
-                        )}
-                      >
-                        <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/80 backdrop-blur-sm">
-                          <span className="text-small font-semibold text-brand">Random Match</span>
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        </div>
-                        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                          <div className="relative flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full border border-brand/40 animate-ping opacity-20 w-24 h-24" />
-                            <div
-                              className="absolute inset-0 rounded-full border border-brand/20 animate-ping opacity-10 w-32 h-32"
-                              style={{ animationDelay: '500ms' }}
-                            />
-                            <div className="h-20 w-20 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-display text-h2 font-bold z-10 shadow-[0_0_20px_rgba(var(--brand),0.3)]">
-                              U
+                                    {/* Post Media (Placeholder Image) */}
+                                    <div className="w-full aspect-square bg-muted relative overflow-hidden group">
+                                      <div className="absolute inset-0 bg-gradient-to-tr from-brand/20 to-blue-500/10" />
+                                      <Image
+                                        src="/logo.png"
+                                        alt="post media"
+                                        fill
+                                        className="object-cover opacity-80 mix-blend-screen scale-110 group-hover:scale-100 transition-transform duration-700"
+                                      />
+                                      {/* Overlay gradient for aesthetics */}
+                                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+                                    </div>
+
+                                    {/* Post Actions & Caption */}
+                                    <div className="flex flex-col px-4 pt-3 gap-2">
+                                      <div className="flex gap-4 items-center text-foreground/80">
+                                        <span className="text-h2">♡</span>
+                                        <span className="text-h3">💬</span>
+                                        <span className="text-h3">↗</span>
+                                      </div>
+                                      <p className="text-caption text-foreground/90 mt-1">
+                                        <span className="font-semibold mr-2">Anonymous Senior</span>
+                                        Just uploaded all the notes and study guides for the
+                                        upcoming DSA midterms into the shared drive. Good luck
+                                        everyone! 📚✨
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground mt-1">
+                                        View all 12 comments
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Post 2 */}
+                                  <div className="flex flex-col border-b border-border/40 bg-surface pb-4 mb-2">
+                                    <div className="flex items-center gap-3 p-3">
+                                      <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                                        <span className="text-[10px] font-bold text-blue-500">
+                                          AJ
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-small font-semibold text-foreground leading-tight">
+                                          Anonymous Junior
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                          Design Dept • 5h ago
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="w-full aspect-square bg-muted relative overflow-hidden group">
+                                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-brand/10" />
+                                      <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-h3 font-display font-semibold text-foreground/80">
+                                        Anyone going to the design meetup tonight? Looking for a
+                                        squad! 🎨
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col px-4 pt-3 gap-2">
+                                      <div className="flex gap-4 items-center text-foreground/80">
+                                        <span className="text-h2">♡</span>
+                                        <span className="text-h3">💬</span>
+                                        <span className="text-h3">↗</span>
+                                      </div>
+                                      <p className="text-caption text-foreground/90 mt-1">
+                                        <span className="font-semibold mr-2">Anonymous Junior</span>
+                                        Let me know!
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground mt-1">
+                                        View all 4 comments
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                          <p className="text-body font-medium text-foreground mt-4 animate-pulse">
-                            Finding a match...
-                          </p>
                         </div>
-                      </div>
 
-                      {/* STATE 2: Anonymous Chat */}
-                      <div
-                        className={cn(
-                          'absolute inset-0 pt-8 flex flex-col transition-opacity duration-1000',
-                          mockupScreenIndex === 2 ? 'opacity-100 z-20' : 'opacity-0 z-0',
-                        )}
-                      >
-                        <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/80 backdrop-blur-sm">
-                          <span className="text-small font-semibold text-foreground">
-                            Anonymous Chat
-                          </span>
-                          <div className="h-6 w-6 rounded-full bg-brand flex items-center justify-center text-[10px] font-bold text-brand-foreground">
-                            AU
+                        {/* STATE 1: Match Radar */}
+                        <div
+                          className={cn(
+                            'absolute inset-0 pt-8 flex flex-col bg-surface transition-opacity duration-1000',
+                            mockupScreenIndex === 1 ? 'opacity-100 z-20' : 'opacity-0 z-0',
+                          )}
+                        >
+                          <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/80 backdrop-blur-sm">
+                            <span className="text-small font-semibold text-brand">
+                              Random Match
+                            </span>
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          </div>
+                          <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                            <div className="relative flex items-center justify-center">
+                              <div className="absolute inset-0 rounded-full border border-brand/40 animate-ping opacity-20 w-24 h-24" />
+                              <div
+                                className="absolute inset-0 rounded-full border border-brand/20 animate-ping opacity-10 w-32 h-32"
+                                style={{ animationDelay: '500ms' }}
+                              />
+                              <div className="h-20 w-20 rounded-full bg-brand/10 border border-brand/30 flex items-center justify-center text-brand font-display text-h2 font-bold z-10 shadow-[0_0_20px_rgba(var(--brand),0.3)]">
+                                U
+                              </div>
+                            </div>
+                            <p className="text-body font-medium text-foreground mt-4 animate-pulse">
+                              Finding a match...
+                            </p>
                           </div>
                         </div>
-                        <div className="flex-1 flex flex-col gap-3 p-5 overflow-hidden">
-                          <div className="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-sm bg-muted text-caption text-foreground">
-                            Hey! Are you studying at the library right now?
-                          </div>
-                          <div className="self-end max-w-[85%] p-3 rounded-2xl rounded-tr-sm bg-brand text-caption text-brand-foreground">
-                            Yeah, on the 3rd floor. Want to study together?
-                          </div>
-                          <div className="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-sm bg-muted text-caption text-foreground">
-                            Sure! I'll be there in 5 mins. Bring notes! 📚
-                          </div>
-                          <div className="self-end max-w-[85%] p-3 rounded-2xl rounded-tr-sm bg-brand text-caption text-brand-foreground shadow-sm">
-                            Got em right here. See ya soon!
-                          </div>
-                        </div>
-                        <div className="p-4 border-t border-border/40 bg-surface flex gap-2">
-                          <div className="flex-1 h-9 rounded-full bg-muted/60 border border-border/40 px-3 flex items-center text-muted-foreground text-caption">
-                            Message...
-                          </div>
-                          <div className="h-9 w-9 rounded-full bg-brand flex items-center justify-center text-brand-foreground shadow-sm">
-                            ↑
-                          </div>
-                        </div>
-                      </div>
 
-                      {/* Home Indicator */}
-                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-foreground/20 rounded-full z-50" />
+                        {/* STATE 2: Anonymous Chat */}
+                        <div
+                          className={cn(
+                            'absolute inset-0 pt-8 flex flex-col transition-opacity duration-1000',
+                            mockupScreenIndex === 2 ? 'opacity-100 z-20' : 'opacity-0 z-0',
+                          )}
+                        >
+                          <div className="flex justify-between items-center px-5 py-3 border-b border-border/40 bg-surface/80 backdrop-blur-sm">
+                            <span className="text-small font-semibold text-foreground">
+                              Anonymous Chat
+                            </span>
+                            <div className="h-6 w-6 rounded-full bg-brand flex items-center justify-center text-[10px] font-bold text-brand-foreground">
+                              AU
+                            </div>
+                          </div>
+                          <div className="flex-1 flex flex-col gap-3 p-5 overflow-hidden">
+                            <div className="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-sm bg-muted text-caption text-foreground">
+                              Hey! Are you studying at the library right now?
+                            </div>
+                            <div className="self-end max-w-[85%] p-3 rounded-2xl rounded-tr-sm bg-brand text-caption text-brand-foreground">
+                              Yeah, on the 3rd floor. Want to study together?
+                            </div>
+                            <div className="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-sm bg-muted text-caption text-foreground">
+                              Sure! I'll be there in 5 mins. Bring notes! 📚
+                            </div>
+                            <div className="self-end max-w-[85%] p-3 rounded-2xl rounded-tr-sm bg-brand text-caption text-brand-foreground shadow-sm">
+                              Got em right here. See ya soon!
+                            </div>
+                          </div>
+                          <div className="p-4 border-t border-border/40 bg-surface flex gap-2">
+                            <div className="flex-1 h-9 rounded-full bg-muted/60 border border-border/40 px-3 flex items-center text-muted-foreground text-caption">
+                              Message...
+                            </div>
+                            <div className="h-9 w-9 rounded-full bg-brand flex items-center justify-center text-brand-foreground shadow-sm">
+                              ↑
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Home Indicator */}
+                        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-foreground/20 rounded-full z-50" />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Hardware Buttons */}
-                  <div className="absolute top-28 -left-[13px] w-[3px] h-8 bg-[#2a2a2c] rounded-l-md" />
-                  <div className="absolute top-44 -left-[13px] w-[3px] h-12 bg-[#2a2a2c] rounded-l-md" />
-                  <div className="absolute top-60 -left-[13px] w-[3px] h-12 bg-[#2a2a2c] rounded-l-md" />
-                  <div className="absolute top-44 -right-[13px] w-[3px] h-16 bg-[#2a2a2c] rounded-r-md" />
+                    {/* Hardware Buttons */}
+                    <div className="absolute top-28 -left-[13px] w-[3px] h-8 bg-[#2a2a2c] rounded-l-md" />
+                    <div className="absolute top-44 -left-[13px] w-[3px] h-12 bg-[#2a2a2c] rounded-l-md" />
+                    <div className="absolute top-60 -left-[13px] w-[3px] h-12 bg-[#2a2a2c] rounded-l-md" />
+                    <div className="absolute top-44 -right-[13px] w-[3px] h-16 bg-[#2a2a2c] rounded-r-md" />
+                  </div>
                 </div>
               </div>
               {/* Close Bottom Section container */}

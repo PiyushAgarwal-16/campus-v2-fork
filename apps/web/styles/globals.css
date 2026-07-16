@@ -16,6 +16,12 @@
  * gradients, glass, or neon. Values are HSL channels for Tailwind alpha support.
  */
 @layer base {
+  html,
+  body {
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+  }
+
   :root {
     --background: 210 20% 98%; /* #F8FAFC - soft slate-grey */
     --foreground: 222 47% 11%; /* #111827 */
